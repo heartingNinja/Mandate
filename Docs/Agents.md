@@ -120,7 +120,8 @@ tests use .NET's `HttpClient`.
    `>>> thinking:`: OpenRouter and DeepSeek send their models' reasoning, Claude and Gemini are asked for a thinking
    summary, and OpenAI's own API sends none. The thinking is never shown to the other seats.
 6. **Send results...** on the scoreboard lets the player send the finished game (scores, seats, models and the full
-   transcript, never the keys) to the developer. It is opt-in, game by game. Setup: `Tools/MandateResultsRelay/README.md`.
+   transcript, never the keys) to the developer. It is opt-in, game by game. A copy built from this repository has no
+   relay address, so it only saves reports on the player's own machine.
 
 Everything the Table screen sets can also be set on the `Mandate` object in the Inspector before pressing Play.
 

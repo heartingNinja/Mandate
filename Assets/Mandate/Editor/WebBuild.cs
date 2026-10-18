@@ -45,7 +45,7 @@ namespace Mandate.EditorTools
             // Git ignores the relay settings, so a fresh clone builds without them. Still builds; Send only saves.
             if (!File.Exists("Assets/Resources/MandateResultsRelay.json"))
                 Debug.LogWarning("Mandate web build: no Assets/Resources/MandateResultsRelay.json, so 'Send results...' will only save "
-                               + "reports on the player's machine. See Tools/MandateResultsRelay/README.md.");
+                               + "reports on the player's machine.");
 
             PlayerSettings.WebGL.template = "PROJECT:Mandate";   // Assets/WebGLTemplates/Mandate: full-window page, Mandate icon
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;

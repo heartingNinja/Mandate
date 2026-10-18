@@ -2,7 +2,7 @@
 //
 // They live in Assets/Resources/MandateResultsRelay.json, which .gitignore keeps OUT of the public repository, so
 // people reading the code on GitHub don't get a working address to send reports to. A copy with blank values is
-// Tools/MandateResultsRelay/MandateResultsRelay.example.json; copy it into Assets/Resources and fill it in.
+// { "url": "", "token": "" }; put it in Assets/Resources and fill it in.
 //
 // The file is still built into every copy of the game (it has to be, the game posts to it). Keeping it out of git
 // stops casual use; the relay's daily caps and a token change are what stop anyone who digs it out of a build.
@@ -20,7 +20,7 @@ namespace Mandate.Viewer
         /// <summary>Resources path of the settings file (Assets/Resources/MandateResultsRelay.json), without the extension.</summary>
         public const string ResourceName = "MandateResultsRelay";
 
-        /// <summary>Web app URL of the results relay (Tools/MandateResultsRelay/README.md), ending in /exec.</summary>
+        /// <summary>Web app URL of the results relay, ending in /exec.</summary>
         public string url = "";
 
         /// <summary>Must equal the relay's SHARED_TOKEN script property. The relay refuses reports without it.</summary>

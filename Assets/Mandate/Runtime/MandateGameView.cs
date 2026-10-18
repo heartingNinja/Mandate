@@ -32,7 +32,7 @@
 //   TranscriptWriter.cs   writes a finished game to a text file
 //   SendResultsDialog.cs  overlay: opt-in screen to send a finished game to the developer
 //   ResultReport.cs       what gets sent: scores, seats, models, the transcript (never the keys)
-//   ResultSender.cs       posts it to the results relay (Tools/MandateResultsRelay), retries later if offline
+//   ResultSender.cs       posts it to the results relay, retries later if offline
 //   ResultsRelaySettings.cs  the relay's URL and token, read from a file kept out of git
 //   WebRequests.cs        sends the AI seats' HTTP calls with UnityWebRequest, so the game also runs in a browser
 //   WebFiles.cs           browser builds only: saves files for good and downloads transcripts

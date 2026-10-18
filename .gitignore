@@ -53,7 +53,7 @@ seats.json
 .env
 *.key
 
-# Results relay URL + token (Tools/MandateResultsRelay/README.md). Built into the game, kept out of the public repo.
+# Results relay URL + token. Built into the game, kept out of the public repo.
 /Assets/Resources/MandateResultsRelay.json
 /Assets/Resources/MandateResultsRelay.json.meta
 

@@ -5,7 +5,7 @@
 // every reply). It never reads table.json, and every API key the game knows about is blanked out of the text
 // before it goes, in case a model ever repeats one.
 //
-// Field names are read by Tools/MandateResultsRelay/Code.gs. Rename one here and rename it there.
+// Field names are read by the results relay (not in this repository). Rename one here and rename it there.
 // Plain public fields so JsonUtility can write it and read it back from the pending folder.
 
 using System;

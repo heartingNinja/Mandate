@@ -1,8 +1,8 @@
 // ResultSender — sends a ResultReport to the results relay, and keeps any that could not be sent to retry later.
 //
-// The relay is a Google Apps Script web app (Tools/MandateResultsRelay) running on the developer's Google
-// account. It emails each report to the developer's email with the transcript attached and adds rows to
-// a "Mandate Results" Google Sheet. The game never holds an email password: only the relay's URL and a shared token.
+// The relay is a Google Apps Script web app on the developer's Google account (it is not in this repository).
+// It emails each report to the developer with the transcript attached and adds rows to a "Mandate Results" Google
+// Sheet. The game never holds an email password: only the relay's URL and a shared token.
 //
 // How a delivery is recognised: Apps Script runs doPost, then answers with a 302 redirect to a one-time
 // script.googleusercontent.com URL that serves the reply. The redirect is followed by hand with a GET, and only a
