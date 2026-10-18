@@ -7,6 +7,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Mandate.Viewer
 {
@@ -48,9 +49,12 @@ namespace Mandate.Viewer
             Card = new GUIStyle(GUI.skin.box) { padding = new RectOffset(8, 8, 6, 6), margin = new RectOffset(0, 0, 4, 4) };
             Card.normal.background = cardBg;
 
-            Title = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Bold, richText = true, alignment = TextAnchor.MiddleLeft };
-            Label = new GUIStyle(GUI.skin.label) { fontSize = 14, richText = true, alignment = TextAnchor.MiddleLeft };
-            Small = new GUIStyle(GUI.skin.label) { fontSize = 12, richText = true, alignment = TextAnchor.MiddleLeft };
+            // Title, Label and Small stay on one line. Unity's label wraps by default, and in the web build a label's
+            // measured width can come out a hair narrower than the drawn text, so it wrapped onto a second line that
+            // was cut off. Text that should wrap uses Wrap or LogLine.
+            Title = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Bold, richText = true, alignment = TextAnchor.MiddleLeft, wordWrap = false };
+            Label = new GUIStyle(GUI.skin.label) { fontSize = 14, richText = true, alignment = TextAnchor.MiddleLeft, wordWrap = false };
+            Small = new GUIStyle(GUI.skin.label) { fontSize = 12, richText = true, alignment = TextAnchor.MiddleLeft, wordWrap = false };
             Wrap = new GUIStyle(Small) { wordWrap = true, alignment = TextAnchor.UpperLeft };
             LogLine = new GUIStyle(GUI.skin.label) { fontSize = 12, richText = true, wordWrap = true, alignment = TextAnchor.UpperLeft, margin = new RectOffset(0, 0, 1, 1) };
             Button = new GUIStyle(GUI.skin.button) { fontSize = 13, richText = true };
@@ -70,6 +74,8 @@ namespace Mandate.Viewer
         // The game tracks hover itself rather than using Unity's GUI.tooltip, which in the web build kept showing the
         // last tooltip after the mouse had moved away. Every repaint starts with no tip, Tip() sets it when the mouse
         // is over the control just drawn, and CardIcons.DrawTooltip draws it last, on top of every panel.
+        // The mouse position comes from the Input System (MouseHere), because in the web build Unity's repaint events
+        // keep an old mouse position, so hovering found nothing.
 
         /// <summary>The hover text for this repaint, or "" when the mouse is over nothing with a tooltip.</summary>
         public static string HoverTip = "";
@@ -90,7 +96,16 @@ namespace Mandate.Viewer
         {
             if (Event.current.type != EventType.Repaint || string.IsNullOrEmpty(tooltip)) return;   // the last rect is only real while repainting
             if (mouseInScroll.Contains(false)) return;
-            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)) HoverTip = tooltip;
+            if (GUILayoutUtility.GetLastRect().Contains(MouseHere())) HoverTip = tooltip;
+        }
+
+        /// <summary>Where the mouse is, in the coordinates of whatever is being drawn right now (inside areas, scroll
+        /// views and the canvas scale).</summary>
+        static Vector2 MouseHere()
+        {
+            if (Mouse.current == null) return Event.current.mousePosition;   // no mouse (touch only): fall back to IMGUI's own
+            var p = Mouse.current.position.ReadValue();                       // screen pixels, bottom-left origin
+            return GUIUtility.ScreenToGUIPoint(new Vector2(p.x, Screen.height - p.y));
         }
 
         /// <summary>A button with a hover tooltip.</summary>
@@ -121,7 +136,7 @@ namespace Mandate.Viewer
         {
             if (Event.current.type != EventType.Repaint || mouseInScroll.Contains(false)) return;
             var r = GUILayoutUtility.GetLastRect();
-            var m = Event.current.mousePosition;
+            var m = MouseHere();
             if (!r.Contains(m)) return;
             int rows = (tooltips.Length + xCount - 1) / xCount;
             int col = Mathf.Min(xCount - 1, (int)((m.x - r.x) / r.width * xCount));
@@ -134,7 +149,7 @@ namespace Mandate.Viewer
         /// for this scroll view; EndScroll fills it in.</summary>
         public static Vector2 BeginScroll(Vector2 scroll, Rect lastRect)
         {
-            mouseInScroll.Push(lastRect.Contains(Event.current.mousePosition));   // still in the panel's coordinates here
+            mouseInScroll.Push(lastRect.Contains(MouseHere()));   // still in the panel's coordinates here
             return GUILayout.BeginScrollView(scroll);
         }
 

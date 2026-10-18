@@ -78,7 +78,7 @@ namespace Mandate.Viewer
 
                 var last = st.ActionLog.LastOrDefault(a => a.player == p);
                 if (last.action != null)
-                    GUILayout.Label($"<size=11>last: round {last.round} {last.action}{(last.wasLegal ? "" : " <color=#ff6b6b>(illegal, became pass)</color>")}</size>", Ui.Small);
+                    GUILayout.Label($"<size=11>last: round {last.round} {last.action}{(last.wasLegal ? "" : " <color=#ff6b6b>(illegal, became pass)</color>")}</size>", Ui.Wrap);
                 if (runner.Scores != null)
                     GUILayout.Label($"<b>score {runner.Scores[p]}</b>", Ui.Label);
 

@@ -1,7 +1,7 @@
 {
   "name": "Mandate.Runtime",
   "rootNamespace": "Mandate",
-  "references": [ "Mandate.Core", "Mandate.Agents" ],
+  "references": [ "Mandate.Core", "Mandate.Agents", "Unity.InputSystem" ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

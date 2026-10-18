@@ -119,7 +119,7 @@ namespace Mandate.Viewer
                 if (anyPrices) GUILayout.Label($"<size=11>{price}</size>", Ui.Small, GUILayout.Width(110));
                 GUILayout.EndHorizontal();
             }
-            if (shown.Count > MaxRows) GUILayout.Label($"<size=11>...and {shown.Count - MaxRows} more. Type in the search box to narrow it down.</size>", Ui.Small);
+            if (shown.Count > MaxRows) GUILayout.Label($"<size=11>...and {shown.Count - MaxRows} more. Type in the search box to narrow it down.</size>", Ui.Wrap);
             GUILayout.EndScrollView();
 
             GUILayout.BeginHorizontal();

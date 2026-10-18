@@ -116,15 +116,15 @@ namespace Mandate.Viewer
                         if (ModelPicker.CanList(kind) && Ui.TipButton(models.IsOpenFor(i) ? "close" : "list", "Show this provider's models, with prices where known, and pick one.", GUILayout.Width(50))) { models.Toggle(i); expandedSeat = -1; }
                     }
                 }
-                else if (isHuman) GUILayout.Label("<size=12>a person at this screen. The bottom panel is yours.</size>", Ui.Small);
-                else GUILayout.Label("<size=12>a scripted bot. Click the button to seat an AI model instead.</size>", Ui.Small);
+                else if (isHuman) GUILayout.Label("<size=12>a person at this screen. The bottom panel is yours.</size>", Ui.Wrap);
+                else GUILayout.Label("<size=12>a scripted bot. Click the button to seat an AI model instead.</size>", Ui.Wrap);
                 GUILayout.EndHorizontal();
 
                 if (info != null && isAi)
                 {
                     string hint = string.IsNullOrWhiteSpace(s.model) && info.Model != null ? $"default model: {info.Model}" : info.About;
                     string keyHint = info.KeyEnv == null ? "no key needed" : $"key: {ProviderName(info.KeyEnv)} (below)";
-                    GUILayout.Label($"<size=11>{hint}  ·  {keyHint}</size>", Ui.Small);
+                    GUILayout.Label($"<size=11>{hint}  ·  {keyHint}</size>", Ui.Wrap);
                     if (models.IsOpenFor(i)) models.Draw(i, s);
                 }
                 string browserHint = WebFiles.InBrowser ? BrowserHint(kind, string.IsNullOrWhiteSpace(s.endpoint) ? info?.Endpoint : s.endpoint) : null;

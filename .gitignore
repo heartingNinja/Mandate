@@ -56,3 +56,7 @@ seats.json
 # Results relay URL + token (Tools/MandateResultsRelay/README.md). Built into the game, kept out of the public repo.
 /Assets/Resources/MandateResultsRelay.json
 /Assets/Resources/MandateResultsRelay.json.meta
+
+# Written by Unity's Performance Testing package on each test run
+/Assets/Resources/PerformanceTestRun*.json
+/Assets/Resources/PerformanceTestRun*.json.meta

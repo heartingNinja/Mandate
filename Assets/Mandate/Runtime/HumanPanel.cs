@@ -75,9 +75,9 @@ namespace Mandate.Viewer
                     GUILayout.EndHorizontal();
                     DrawOfferRow(st, me, others);
                     foreach (var m in human.PendingMessages)
-                        GUILayout.Label($"<size=11>queued {(m.to == null ? "public" : "to " + m.to)}: {m.text}</size>", Ui.Small);
+                        GUILayout.Label($"<size=11>queued {(m.to == null ? "public" : "to " + m.to)}: {m.text}</size>", Ui.Wrap);
                     foreach (var o in human.PendingOffers)
-                        GUILayout.Label($"<size=11>queued trade offer to {o.partner}: you give {o.give}, you get {o.get} (binding once sent)</size>", Ui.Small);
+                        GUILayout.Label($"<size=11>queued trade offer to {o.partner}: you give {o.give}, you get {o.get} (binding once sent)</size>", Ui.Wrap);
                     break;
 
                 case Phase.Act:
@@ -88,7 +88,7 @@ namespace Mandate.Viewer
                     var toMe = roundOffers.Where(o => o.To == me).ToList();
                     if (toMe.Count > 0)
                     {
-                        GUILayout.Label("<size=11>Trade offers made to you. Accepting is free: tick any you want, and still pick your action below.</size>", Ui.Small);
+                        GUILayout.Label("<size=11>Trade offers made to you. Accepting is free: tick any you want, and still pick your action below.</size>", Ui.Wrap);
                         foreach (var o in toMe)
                         {
                             bool on = human.PendingAccepts.Contains(o.From);
@@ -98,14 +98,14 @@ namespace Mandate.Viewer
                         }
                     }
                     foreach (var o in roundOffers.Where(o => o.From == me))
-                        GUILayout.Label($"<size=11>You offered {o.To}: give {o.Give}, get {o.Get}. It happens if {o.To} accepts.</size>", Ui.Small);
+                        GUILayout.Label($"<size=11>You offered {o.To}: give {o.Give}, get {o.Get}. It happens if {o.To} accepts.</size>", Ui.Wrap);
                     DrawActionGrid(legal, 6, 118f);
                     GUILayout.EndScrollView();
                     break;
 
                 case Phase.Guess:
                     GUILayout.Label("<b>Guess</b> each opponent's objective (+2 each if right), then Step", Ui.Label);
-                    GUILayout.Label("<size=11>Candidates are every objective dealt this game except the ones you were offered. Each card is held by exactly one player.</size>", Ui.Small);
+                    GUILayout.Label("<size=11>Candidates are every objective dealt this game except the ones you were offered. Each card is held by exactly one player.</size>", Ui.Wrap);
                     var ids = runner.Referee.ViewFor(me).GuessCandidates;
                     if (ids.Count == 0) break;
                     foreach (var q in st.Players.Where(q => q != me))
@@ -117,7 +117,7 @@ namespace Mandate.Viewer
                         CardIcons.Badge(ids[idx].id);
                         Ui.TipLabel($"<b>{ids[idx].id}</b>", CardIcons.Tooltip(ids[idx].id), Ui.Label, GUILayout.Width(146));
                         if (GUILayout.Button(">", Ui.Button, GUILayout.Width(30))) idx = (idx + 1) % ids.Count;
-                        GUILayout.Label($"<size=11>{ids[idx].text}</size>", Ui.Small);
+                        GUILayout.Label($"<size=11>{ids[idx].text}</size>", Ui.Wrap);
                         GUILayout.EndHorizontal();
                         guessIdx[q] = idx;
                         human.PendingGuesses[q] = ids[idx].id;

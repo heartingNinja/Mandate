@@ -97,14 +97,6 @@ namespace Mandate.Viewer
         // The results relay's URL and token are not inspector fields: the scene is in git, and they must not be.
         // They are read from Assets/Resources/MandateResultsRelay.json (ResultsRelaySettings.cs), which git ignores.
 
-        // ------------------------------------------------------------------ inspector: playback
-        [Header("Playback")]
-        [Tooltip("Advance a phase automatically every 'Seconds Per Phase'. Pauses whenever the human seat needs input. Switched on by the Table screen's Start button when nobody is playing.")]
-        public bool autoPlay = false;
-
-        [Tooltip("Delay between automatic phase steps.")]
-        [Range(0.05f, 3f)] public float secondsPerPhase = 0.7f;
-
         // ------------------------------------------------------------------ inspector: art hooks
         [Header("Art (optional - leave empty for the procedural placeholder)")]
         [Tooltip("Sprite used for every node fill. Empty = a generated anti-aliased circle.")]
@@ -172,7 +164,6 @@ namespace Mandate.Viewer
         public string LastTranscriptPath { get; private set; }
 
         HashSet<int> changed = new HashSet<int>();   // nodes whose owner changed in the last resolution
-        float timer;                                 // seconds since the last auto-play step
 
         public string MandateDir => Path.Combine(Application.persistentDataPath, "Mandate");
         public string TablePath => Path.Combine(MandateDir, "table.json");
@@ -243,12 +234,7 @@ namespace Mandate.Viewer
             }
             if (Runner.Finished) { RunToEnd = false; return; }
             if (Table.Open) return;                       // paused while the table is being edited
-            if (RunToEnd) { Step(); return; }
-            if (autoPlay && Human == null)
-            {
-                timer += Time.deltaTime;
-                if (timer >= secondsPerPhase) { timer = 0f; Step(); }
-            }
+            if (RunToEnd) Step();
         }
 
         void OnGUI()
@@ -280,7 +266,7 @@ namespace Mandate.Viewer
         public void NewGame()
         {
             Log.Clear(); Narrator.Reset(); humanPanel.Reset(); SendDialog.Reset(); changed.Clear();
-            timer = 0f; RunToEnd = false; LastTranscriptPath = null;
+            RunToEnd = false; LastTranscriptPath = null;
             EnsureSeats(players);
 
             var names = Enumerable.Range(1, players).Select(i => "P" + i).ToList();
@@ -388,14 +374,14 @@ namespace Mandate.Viewer
         }
 
         /// <summary>The Table screen's Start button: remember the table, close the screen, and start.
-        /// With nobody at the table there is nothing to wait for, so auto-play goes on; untick it to step by hand.</summary>
+        /// With nobody at the table there is nothing to wait for, so it plays to the end; Stop in the top bar pauses it.</summary>
         public void StartFromTable()
         {
             humanPlays = seats[0].IsHuman();
-            if (!humanPlays) autoPlay = true;
             SaveTable();
             Table.Hide();
             NewGame();
+            if (!humanPlays) RunToEnd = true;
         }
 
         // ================================================================== files
@@ -450,7 +436,7 @@ namespace Mandate.Viewer
             file.Save(TablePath);
         }
 
-        // ================================================================== tests and sim (top bar buttons)
+        // ================================================================== tests (top bar button)
         /// <summary>Runs the engine's and the agent layer's self-tests inside play mode and prints the result to the log.</summary>
         public void RunTests()
         {
@@ -474,15 +460,6 @@ namespace Mandate.Viewer
             string msg = fail == 0 ? $"Tests: {pass} passed" : $"Tests: {pass} passed, {fail} FAILED";
             Log.Add(fail == 0 ? $"<color=#7fdc7f><b>{msg}</b></color>" : $"<color=#ff6b6b><b>{msg}</b></color>");
             Debug.Log(msg);
-        }
-
-        /// <summary>Plays 200 bot games with the current settings and prints objective achievement rates.</summary>
-        public void RunSim()
-        {
-            var report = Mandate.Sim.Sim.Run(200, players, seed, botKind);
-            foreach (var line in report.ToString().Split('\n'))
-                if (line.Trim().Length > 0) Log.Add($"<size=11>{line.TrimEnd()}</size>");
-            Debug.Log(report.ToString());
         }
     }
 }

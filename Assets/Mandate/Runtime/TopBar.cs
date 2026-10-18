@@ -1,13 +1,11 @@
 // TopBar — the strip along the top of the screen.
 //
 // Row 1: status (round and phase, or who is still thinking), the Table and New game buttons, Step / Run to end,
-// auto-play with a speed slider, the live "AI thinking" switch, and the Run tests / Sim buttons.
+// the live "AI thinking" switch, and Run tests (not in a browser).
 // Row 2: the player count and seed of the current game, read only. Both are set on the Table screen before a game
 // starts.
 
-using System.Linq;
 using UnityEngine;
-using Mandate.Agents;
 using Mandate.Core;
 
 namespace Mandate.Viewer
@@ -42,18 +40,9 @@ namespace Mandate.Viewer
             GUI.enabled = runner != null && !runner.Finished && !pending && !view.Table.Open;
             if (Ui.TipButton("Step", "Play one phase (negotiate or act). Greyed out while AI seats are still thinking.", GUILayout.Width(64))) view.Step();
             GUI.enabled = runner != null && !runner.Finished && !view.Table.Open;
-            if (Ui.TipButton(view.RunToEnd ? "Stop" : "Run to end", "Play phase after phase, as fast as the seats can answer, until the game ends. Ignores the speed slider. Click Stop to pause.", GUILayout.Width(90))) view.RunToEnd = !view.RunToEnd;
+            if (Ui.TipButton(view.RunToEnd ? "Stop" : "Run to end", "Play phase after phase, as fast as the seats can answer, until the game ends. Click Stop to pause.", GUILayout.Width(90))) view.RunToEnd = !view.RunToEnd;
             GUI.enabled = true;
-            view.autoPlay = Ui.TipToggle(view.autoPlay, " auto", "Play the next phase by itself after the speed slider's delay. Waits whenever you have a move to make.", GUILayout.Width(58));
-            string speedTip = $"How long auto waits between phases: left is slow (3 seconds), right is fast (0.05 seconds). Now {view.secondsPerPhase:0.00} s. Only used while auto is on; AI seats still take as long as they need to answer.";
-            Ui.TipLabel("speed", speedTip, Ui.Small, GUILayout.Width(42));
-            view.secondsPerPhase = 3.05f - GUILayout.HorizontalSlider(3.05f - view.secondsPerPhase, 0.05f, 3f, GUILayout.Width(80));   // slider right = faster
-            Ui.Tip(speedTip);
-
-            // Gap and divider so "AI thinking" doesn't read as part of the auto / speed group.
             GUILayout.Space(14);
-            GUILayout.Label("|", Ui.Small, GUILayout.Width(8));
-            GUILayout.Space(6);
 
             // Live switch: watch the AI seats' private notes as they go, or play it straight and read them at the end.
             bool wasRevealing = view.revealAgentNotes;
@@ -63,7 +52,6 @@ namespace Mandate.Viewer
             GUILayout.FlexibleSpace();
             // The agent tests start a local web server, which a browser cannot do, so a web build has no tests button.
             if (!WebFiles.InBrowser && Ui.TipButton("Run tests", "Run the built-in rules and agent tests. Failures and the totals go to the log.", GUILayout.Width(84))) view.RunTests();
-            if (Ui.TipButton("Sim 200 games", "Play 200 quick games between scripted bots (this player count, seed and bot kind, standard rules) and put the results in the log.", GUILayout.Width(114))) view.RunSim();
             GUILayout.EndHorizontal();
 
             // ---- row 2: the game being played. Read only: players and seed are set on the Table screen before a game.
@@ -71,9 +59,6 @@ namespace Mandate.Viewer
             string gameTip = "The player count and seed this game was started with. Change them on the Table screen; they apply from the next game.";
             if (st == null) Ui.TipLabel("<i>no game yet - press Table to choose the seats</i>", gameTip, Ui.Small);
             else Ui.TipLabel($"<i>this game:</i>  {st.Players.Count} players  -  seed {view.GameSeed}", gameTip, Ui.Small);
-            GUILayout.FlexibleSpace();
-            int aiSeats = view.seats.Take(view.players).Count(s => s != null && Seats.Kinds.TryGetValue(s.NormalizedKind(), out var k) && k.Family != "bot" && k.Family != "human");
-            GUILayout.Label($"<size=11>{(aiSeats == 0 ? "no AI seats" : aiSeats + " AI seat" + (aiSeats == 1 ? "" : "s"))} at the table - press Table to change</size>", Ui.Small);
             GUILayout.EndHorizontal();
 
             GUILayout.EndArea();
