@@ -120,11 +120,17 @@ namespace Mandate.AgentTests
             public void Dispose() { try { listener.Stop(); listener.Close(); } catch { } }
         }
 
-        static string ChatReply(string content, string reasoning = null)
+        static string ChatReply(string content, string reasoning = null, bool billed = false)
         {
             var message = new JObject { ["role"] = "assistant", ["content"] = content };
             if (reasoning != null) message["reasoning"] = reasoning;   // OpenRouter's field for a thinking model's reasoning
-            return new JObject { ["choices"] = new JArray(new JObject { ["message"] = message }) }.ToString();
+            var reply = new JObject { ["choices"] = new JArray(new JObject { ["message"] = message }) };
+            if (billed)   // what OpenRouter sends back: the real model behind an alias, and usage with a cost
+            {
+                reply["model"] = "fake-model-20261001";
+                reply["usage"] = new JObject { ["prompt_tokens"] = 1200, ["completion_tokens"] = 340, ["cost"] = 0.0021 };
+            }
+            return reply.ToString();
         }
 
         static Referee InActPhase(int seed = 9)
@@ -242,12 +248,14 @@ namespace Mandate.AgentTests
         // ---------- provider adapters ----------
         static void OpenAiSeatSpeaksChatCompletions()
         {
-            using (var server = new FakeServer(q => ChatReply("Thinking...\n```json\n{\"action\":{\"type\":\"pass\"},\"notes\":\"n1\"}\n```", "P2 looks weak; passing keeps my walls.")))
+            using (var server = new FakeServer(q => ChatReply("Thinking...\n```json\n{\"action\":{\"type\":\"pass\"},\"notes\":\"n1\"}\n```", "P2 looks weak; passing keeps my walls.", billed: true)))
             {
                 var seat = Seats.Make(new SeatConfig { Kind = "openai", Endpoint = server.Url + "v1", ApiKey = "k1", Model = "fake-model", JsonMode = true, Temperature = 0.5f }, 0);
                 var r = seat.Respond(InActPhase().ViewFor("P1"), CancellationToken.None).Result;
                 Check(r.Error == null && r.Action != null && r.Action.Type == ActionType.Pass && r.Notes == "n1", "chat completion parsed through fences");
-                Check(((LlmAgent)seat).Transcript[0].Thinking == "P2 looks weak; passing keeps my walls.", "reasoning kept in the transcript");
+                var ex = ((LlmAgent)seat).Transcript[0];
+                Check(ex.Thinking == "P2 looks weak; passing keeps my walls.", "reasoning kept in the transcript");
+                Check(ex.Model == "fake-model-20261001" && ex.InputTokens == 1200 && ex.OutputTokens == 340 && Math.Abs(ex.Cost - 0.0021) < 1e-9, "model, tokens and cost read from usage");
                 var q = server.Single();
                 Check(q.Path == "/v1/chat/completions" && q.Headers["Authorization"] == "Bearer k1", "posted to /chat/completions with bearer key");
                 var body = JObject.Parse(q.Body);
@@ -295,7 +303,8 @@ namespace Mandate.AgentTests
         {
             var reply = new JObject
             {
-                ["type"] = "message", ["stop_reason"] = "end_turn",
+                ["type"] = "message", ["stop_reason"] = "end_turn", ["model"] = "fake-claude",
+                ["usage"] = new JObject { ["input_tokens"] = 50, ["cache_creation_input_tokens"] = 900, ["cache_read_input_tokens"] = 0, ["output_tokens"] = 210 },
                 ["content"] = new JArray(
                     new JObject { ["type"] = "thinking", ["thinking"] = "OPT fits my start." },
                     new JObject { ["type"] = "text", ["text"] = "{\"draft\":\"OPT\",\"notes\":\"n2\"}" }),
@@ -305,7 +314,9 @@ namespace Mandate.AgentTests
                 var seat = Seats.Make(new SeatConfig { Kind = "anthropic", Endpoint = server.Url, ApiKey = "k2", Model = "fake-claude", Effort = "low", Temperature = 0.9f }, 0);
                 var r = seat.Respond(new Referee("t", Names, 4).ViewFor("P1"), CancellationToken.None).Result;   // draft phase
                 Check(r.Error == null && r.Draft == "OPT" && r.Notes == "n2", "messages reply parsed, thinking block not taken as the answer");
-                Check(((LlmAgent)seat).Transcript[0].Thinking == "OPT fits my start.", "thinking summary kept in the transcript");
+                var ex = ((LlmAgent)seat).Transcript[0];
+                Check(ex.Thinking == "OPT fits my start.", "thinking summary kept in the transcript");
+                Check(ex.Model == "fake-claude" && ex.InputTokens == 950 && ex.OutputTokens == 210 && ex.Cost < 0, "cached tokens counted in the prompt; no cost from anthropic");
                 var q = server.Single();
                 Check(q.Path == "/v1/messages" && q.Headers["x-api-key"] == "k2" && q.Headers["anthropic-version"] != null, "posted to /v1/messages with key and version");
                 var body = JObject.Parse(q.Body);
@@ -324,7 +335,9 @@ namespace Mandate.AgentTests
                     ["content"] = new JObject { ["parts"] = new JArray(
                         new JObject { ["text"] = "Offer P3 a deal.", ["thought"] = true },
                         new JObject { ["text"] = "{\"messages\":[{\"text\":\"hello\"},{\"to\":\"P3\",\"text\":\"deal?\"}],\"notes\":\"n3\"}" }) }
-                })
+                }),
+                ["modelVersion"] = "fake-gemini-001",
+                ["usageMetadata"] = new JObject { ["promptTokenCount"] = 700, ["candidatesTokenCount"] = 40, ["thoughtsTokenCount"] = 160 },
             }.ToString();
             using (var server = new FakeServer(q => reply))
             {
@@ -337,6 +350,8 @@ namespace Mandate.AgentTests
                 var body = JObject.Parse(q.Body);
                 Check(body["generationConfig"]["responseMimeType"].ToString() == "application/json" && body["system_instruction"] != null, "gemini body shape");
                 Check((bool)body["generationConfig"]["thinkingConfig"]["includeThoughts"] && ((LlmAgent)seat).Transcript[0].Thinking == "Offer P3 a deal.", "thought summary asked for and kept apart from the answer");
+                var ex = ((LlmAgent)seat).Transcript[0];
+                Check(ex.Model == "fake-gemini-001" && ex.InputTokens == 700 && ex.OutputTokens == 200, "thinking tokens counted as output");
             }
         }
 

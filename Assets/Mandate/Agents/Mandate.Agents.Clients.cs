@@ -1,5 +1,6 @@
 // Mandate.Agents.Clients — one thin HTTP client per API family. Each turns (system, user) into that family's
-// request body, sends it, and pulls the reply text back out. Nothing about the game lives here.
+// request body, sends it, and pulls the reply text back out, with the token counts (and cost, where the provider
+// reports one) for the results report. Nothing about the game lives here.
 //
 //   OpenAiChatClient   POST {endpoint}/chat/completions          OpenAI, OpenRouter, Groq, Together, xAI, DeepSeek,
 //                                                               Mistral, Ollama, LM Studio, vLLM, and anything else
@@ -67,6 +68,9 @@ namespace Mandate.Agents
         public static string Join(string baseUrl, string path) => baseUrl.TrimEnd('/') + "/" + path.TrimStart('/');
 
         public static string Host(string url) { try { return new Uri(url).Host; } catch { return url; } }
+
+        /// <summary>A token count from a reply's usage block; 0 when it is missing or not a whole number.</summary>
+        public static int Int(JToken t) => t != null && t.Type == JTokenType.Integer ? (int)t : 0;
     }
 
     // ---------- The default transport: .NET's HttpClient (console harness, tests) ----------
@@ -127,6 +131,7 @@ namespace Mandate.Agents
                 if (cfg.Kind == "openrouter") body["reasoning"] = new JObject { ["effort"] = cfg.Effort };
                 else body["reasoning_effort"] = cfg.Effort;
             }
+            if (cfg.Kind == "openrouter") body["usage"] = new JObject { ["include"] = true };   // asks OpenRouter to put the call's cost in "usage"
 
             var text = await Http.PostJson(Http.Join(cfg.Endpoint, "chat/completions"), body.ToString(Formatting.None), ct,
                 ("Authorization", key == null ? null : "Bearer " + key)).ConfigureAwait(false);
@@ -143,16 +148,28 @@ namespace Mandate.Agents
             // A thinking model's reasoning comes back as "reasoning" (OpenRouter) or "reasoning_content" (DeepSeek's own
             // API, vLLM). OpenAI's own API sends none. Kept for the transcript.
             string thinking = Text(message?["reasoning"]) ?? Text(message?["reasoning_content"]);
-            if (!string.IsNullOrWhiteSpace(reply)) return new ChatReply(reply, thinking);
+            if (!string.IsNullOrWhiteSpace(reply)) return Billed(new ChatReply(reply, thinking), j);
 
             // Thinking models sometimes settle the answer while thinking and then stop without writing it out, so look
             // for the answer in the thinking before giving up. The marker in front shows in the transcript; the parser
             // skips past it.
             var rescued = Json.LastReply(thinking);
-            if (rescued != null) return new ChatReply("[answer taken from the model's reasoning] " + rescued.ToString(Formatting.None), thinking);
+            if (rescued != null) return Billed(new ChatReply("[answer taken from the model's reasoning] " + rescued.ToString(Formatting.None), thinking), j);
             // Say why, so it can be retried and the transcript explains it.
             throw new Exception($"empty reply (finish_reason: {choice["finish_reason"]?.ToString() ?? "none"}; "
                 + (thinking == null ? "no reasoning text)" : "reasoning: " + LlmAgent.Snip(thinking, 300) + ")"));
+        }
+
+        // Copies the model name and "usage": { prompt_tokens, completion_tokens, cost? } onto the reply.
+        // completion_tokens already counts reasoning tokens. Only OpenRouter sends a cost.
+        static ChatReply Billed(ChatReply r, JObject j)
+        {
+            r.Model = Text(j["model"]);
+            var usage = j["usage"];
+            r.InputTokens = Http.Int(usage?["prompt_tokens"]);
+            r.OutputTokens = Http.Int(usage?["completion_tokens"]);
+            if (usage?["cost"] is JValue cost && (cost.Type == JTokenType.Float || cost.Type == JTokenType.Integer)) r.Cost = (double)cost;
+            return r;
         }
 
         // A JSON field as text, or null when it is missing, null or blank.
@@ -204,7 +221,14 @@ namespace Mandate.Agents
             string answer = string.Concat(parts.Where(p => p["type"]?.ToString() == "text").Select(p => p["text"]?.ToString() ?? ""));
             string thinking = string.Join("\n\n", parts.Where(p => p["type"]?.ToString() == "thinking")
                 .Select(p => p["thinking"]?.ToString()).Where(t => !string.IsNullOrWhiteSpace(t)));
-            return new ChatReply(answer, thinking.Length > 0 ? thinking : null);
+            // "usage": cached prompt tokens are counted apart from input_tokens, so add them back for the full prompt size.
+            var usage = j["usage"];
+            return new ChatReply(answer, thinking.Length > 0 ? thinking : null)
+            {
+                Model = j["model"]?.ToString(),
+                InputTokens = Http.Int(usage?["input_tokens"]) + Http.Int(usage?["cache_creation_input_tokens"]) + Http.Int(usage?["cache_read_input_tokens"]),
+                OutputTokens = Http.Int(usage?["output_tokens"]),
+            };
         }
     }
 
@@ -246,7 +270,14 @@ namespace Mandate.Agents
             bool IsThought(JToken p) => p["thought"]?.Type == JTokenType.Boolean && (bool)p["thought"];
             string answer = string.Concat(parts.Where(p => !IsThought(p)).Select(p => p["text"]?.ToString() ?? ""));
             string thinking = string.Join("\n\n", parts.Where(IsThought).Select(p => p["text"]?.ToString()).Where(t => !string.IsNullOrWhiteSpace(t)));
-            return new ChatReply(answer, thinking.Length > 0 ? thinking : null);
+            // "usageMetadata": thinking tokens are billed as output but counted apart from the answer's.
+            var usage = j["usageMetadata"];
+            return new ChatReply(answer, thinking.Length > 0 ? thinking : null)
+            {
+                Model = j["modelVersion"]?.ToString(),
+                InputTokens = Http.Int(usage?["promptTokenCount"]),
+                OutputTokens = Http.Int(usage?["candidatesTokenCount"]) + Http.Int(usage?["thoughtsTokenCount"]),
+            };
         }
     }
 }

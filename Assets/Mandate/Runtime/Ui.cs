@@ -5,6 +5,7 @@
 // points; Scale converts to real pixels. MandateGameView.OnGUI applies the scale once (GUI.matrix), after which
 // every panel simply draws in points. Styles are built on first use inside OnGUI because GUI.skin is only valid there.
 
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mandate.Viewer
@@ -66,13 +67,83 @@ namespace Mandate.Viewer
         }
 
         // ------------------------------------------------------------------ tooltips
-        /// <summary>Gives the control just drawn a hover tooltip. For sliders and text boxes, which cannot carry one
-        /// themselves (buttons, toggles and labels take a GUIContent with the tooltip instead). It lays an invisible
-        /// label over the control; labels ignore clicks, so the control underneath still works.</summary>
+        // The game tracks hover itself rather than using Unity's GUI.tooltip, which in the web build kept showing the
+        // last tooltip after the mouse had moved away. Every repaint starts with no tip, Tip() sets it when the mouse
+        // is over the control just drawn, and CardIcons.DrawTooltip draws it last, on top of every panel.
+
+        /// <summary>The hover text for this repaint, or "" when the mouse is over nothing with a tooltip.</summary>
+        public static string HoverTip = "";
+
+        // One entry per scroll view being drawn: is the mouse over its visible part? Rows scrolled out of sight
+        // still have rects, so without this they could claim the mouse while it is over something above or below.
+        static readonly Stack<bool> mouseInScroll = new Stack<bool>();
+
+        /// <summary>Call at the top of OnGUI, before anything is drawn: every repaint starts with no tip.</summary>
+        public static void BeginTips()
+        {
+            mouseInScroll.Clear();
+            if (Event.current.type == EventType.Repaint) HoverTip = "";
+        }
+
+        /// <summary>Gives the control just drawn a hover tooltip. Call it straight after the control.</summary>
         public static void Tip(string tooltip)
         {
-            if (Event.current.type != EventType.Repaint) return;   // the last rect is only real while repainting
-            GUI.Label(GUILayoutUtility.GetLastRect(), new GUIContent("", tooltip), GUIStyle.none);
+            if (Event.current.type != EventType.Repaint || string.IsNullOrEmpty(tooltip)) return;   // the last rect is only real while repainting
+            if (mouseInScroll.Contains(false)) return;
+            if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)) HoverTip = tooltip;
+        }
+
+        /// <summary>A button with a hover tooltip.</summary>
+        public static bool TipButton(string text, string tooltip, params GUILayoutOption[] options)
+        {
+            bool clicked = GUILayout.Button(text, Button, options);
+            Tip(tooltip);
+            return clicked;
+        }
+
+        /// <summary>A toggle with a hover tooltip.</summary>
+        public static bool TipToggle(bool value, string text, string tooltip, params GUILayoutOption[] options)
+        {
+            bool result = GUILayout.Toggle(value, text, Toggle, options);
+            Tip(tooltip);
+            return result;
+        }
+
+        /// <summary>A label with a hover tooltip.</summary>
+        public static void TipLabel(string text, string tooltip, GUIStyle style, params GUILayoutOption[] options)
+        {
+            GUILayout.Label(text, style, options);
+            Tip(tooltip);
+        }
+
+        /// <summary>Hover tooltips for the cells of the GUILayout.SelectionGrid just drawn, one per cell.</summary>
+        public static void GridTips(string[] tooltips, int xCount)
+        {
+            if (Event.current.type != EventType.Repaint || mouseInScroll.Contains(false)) return;
+            var r = GUILayoutUtility.GetLastRect();
+            var m = Event.current.mousePosition;
+            if (!r.Contains(m)) return;
+            int rows = (tooltips.Length + xCount - 1) / xCount;
+            int col = Mathf.Min(xCount - 1, (int)((m.x - r.x) / r.width * xCount));
+            int row = Mathf.Min(rows - 1, (int)((m.y - r.y) / r.height * rows));
+            int i = row * xCount + col;
+            if (i < tooltips.Length && !string.IsNullOrEmpty(tooltips[i])) HoverTip = tooltips[i];
+        }
+
+        /// <summary>GUILayout.BeginScrollView that keeps hover tips to the part you can see. Pass a Rect field kept
+        /// for this scroll view; EndScroll fills it in.</summary>
+        public static Vector2 BeginScroll(Vector2 scroll, Rect lastRect)
+        {
+            mouseInScroll.Push(lastRect.Contains(Event.current.mousePosition));   // still in the panel's coordinates here
+            return GUILayout.BeginScrollView(scroll);
+        }
+
+        /// <summary>Ends a scroll view started with BeginScroll, and remembers where it sat on screen.</summary>
+        public static void EndScroll(ref Rect lastRect)
+        {
+            GUILayout.EndScrollView();
+            if (mouseInScroll.Count > 0) mouseInScroll.Pop();
+            if (Event.current.type == EventType.Repaint) lastRect = GUILayoutUtility.GetLastRect();
         }
 
         // A 1x1 texture of one colour, used as a panel background. HideAndDontSave keeps it out of the scene file.

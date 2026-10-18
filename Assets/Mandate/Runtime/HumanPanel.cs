@@ -53,7 +53,7 @@ namespace Mandate.Viewer
                     {
                         GUILayout.BeginHorizontal();
                         CardIcons.Badge(o.Id);
-                        if (GUILayout.Toggle(human.PendingDraft == o.Id, new GUIContent($"  <b>{o.Id}</b>  {o.Text}", CardIcons.Tooltip(o.Id)), Ui.Toggle)) human.PendingDraft = o.Id;
+                        if (Ui.TipToggle(human.PendingDraft == o.Id, $"  <b>{o.Id}</b>  {o.Text}", CardIcons.Tooltip(o.Id))) human.PendingDraft = o.Id;
                         GUILayout.EndHorizontal();
                     }
                     break;
@@ -115,7 +115,7 @@ namespace Mandate.Viewer
                         GUILayout.Label(view.Colors.Tag(q), Ui.Label, GUILayout.Width(40));
                         if (GUILayout.Button("<", Ui.Button, GUILayout.Width(30))) idx = (idx - 1 + ids.Count) % ids.Count;
                         CardIcons.Badge(ids[idx].id);
-                        GUILayout.Label(new GUIContent($"<b>{ids[idx].id}</b>", CardIcons.Tooltip(ids[idx].id)), Ui.Label, GUILayout.Width(146));
+                        Ui.TipLabel($"<b>{ids[idx].id}</b>", CardIcons.Tooltip(ids[idx].id), Ui.Label, GUILayout.Width(146));
                         if (GUILayout.Button(">", Ui.Button, GUILayout.Width(30))) idx = (idx + 1) % ids.Count;
                         GUILayout.Label($"<size=11>{ids[idx].text}</size>", Ui.Small);
                         GUILayout.EndHorizontal();

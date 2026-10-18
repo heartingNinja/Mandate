@@ -1,7 +1,7 @@
 // ResultReport — one finished game, packed up to send to the developer.
 //
 // Built only when the player presses Send in the "Send results" dialog. It holds the scores, each seat's model,
-// card and timings, the player's optional comment, and the full transcript (every prompt, the models' thinking,
+// card, timings and token use, the player's optional comment, and the full transcript (every prompt, the models' thinking,
 // every reply). It never reads table.json, and every API key the game knows about is blanked out of the text
 // before it goes, in case a model ever repeats one.
 //
@@ -57,6 +57,10 @@ namespace Mandate.Viewer
             public float AvgSeconds;
             public float MaxSeconds;
             public int ThinkingReplies;  // replies that came back with the model's thinking
+            public string ModelUsed;     // AI seats: the model(s) the provider says answered, which can differ from Model when Model is an alias
+            public int InputTokens;      // AI seats: prompt tokens over the whole game, 0 when the provider never said
+            public int OutputTokens;     // AI seats: reply + thinking tokens over the whole game
+            public double Cost = -1;     // AI seats: US dollars, only when the provider reports it (OpenRouter); -1 = unknown
         }
 
         /// <summary>Packs up the finished game on the view. The comment and contact are what the player typed.</summary>
@@ -110,6 +114,10 @@ namespace Mandate.Viewer
                         s.AvgSeconds = ex.Count > 0 ? (float)ex.Average(e => e.Seconds) : 0f;
                         s.MaxSeconds = ex.Count > 0 ? (float)ex.Max(e => e.Seconds) : 0f;
                         s.ThinkingReplies = ex.Count(e => !string.IsNullOrWhiteSpace(e.Thinking));
+                        s.ModelUsed = string.Join(", ", ex.Select(e => e.Model).Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
+                        s.InputTokens = ex.Sum(e => e.InputTokens);
+                        s.OutputTokens = ex.Sum(e => e.OutputTokens);
+                        s.Cost = ex.Any(e => e.Cost >= 0) ? ex.Where(e => e.Cost >= 0).Sum(e => e.Cost) : -1;
                     }
                 seats.Add(s);
             }

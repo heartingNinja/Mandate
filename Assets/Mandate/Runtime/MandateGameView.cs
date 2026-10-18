@@ -259,9 +259,7 @@ namespace Mandate.Viewer
                 return;
             }
             Ui.EnsureStyles();
-            // Unity keeps the last tooltip until another control with a tooltip is hovered, so moving onto the board
-            // would leave it stuck. Clearing it each repaint means only the control under the mouse right now sets it.
-            if (Event.current.type == EventType.Repaint) GUI.tooltip = "";
+            Ui.BeginTips();   // only the control under the mouse right now sets this repaint's tooltip
             GUI.matrix = Matrix4x4.Scale(new Vector3(Ui.Scale, Ui.Scale, 1f));   // draw on the virtual canvas
             topBar.Draw();
             if (Runner != null)

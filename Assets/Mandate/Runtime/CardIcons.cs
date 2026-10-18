@@ -70,7 +70,7 @@ namespace Mandate.Viewer
             var g = GroupOf(id);
             var old = GUI.backgroundColor;
             GUI.backgroundColor = g.Colour;
-            GUILayout.Label(new GUIContent(g.Code, Tooltip(id)), badgeStyle, GUILayout.Width(24), GUILayout.Height(18));
+            Ui.TipLabel(g.Code, Tooltip(id), badgeStyle, GUILayout.Width(24), GUILayout.Height(18));
             GUI.backgroundColor = old;
         }
 
@@ -78,7 +78,7 @@ namespace Mandate.Viewer
         public static void Name(string id, GUIStyle style)
         {
             Badge(id);
-            GUILayout.Label(new GUIContent($"<b>{id}</b>", Tooltip(id)), style, GUILayout.ExpandWidth(false));
+            Ui.TipLabel($"<b>{id}</b>", Tooltip(id), style, GUILayout.ExpandWidth(false));
         }
 
         /// <summary>A row of badges with names, wrapped to the given width. Used for "in play this game".</summary>
@@ -98,12 +98,12 @@ namespace Mandate.Viewer
             GUILayout.EndHorizontal();
         }
 
-        /// <summary>Draws whatever tooltip the mouse is over, beside the mouse. Call last in OnGUI, outside any area.</summary>
+        /// <summary>Draws whatever tooltip the mouse is over (Ui.HoverTip), beside the mouse. Call last in OnGUI, outside any area.</summary>
         public static void DrawTooltip()
         {
-            if (string.IsNullOrEmpty(GUI.tooltip)) return;
+            if (string.IsNullOrEmpty(Ui.HoverTip)) return;
             EnsureStyles();
-            var content = new GUIContent(GUI.tooltip);
+            var content = new GUIContent(Ui.HoverTip);
             float w = 300f, h = tipStyle.CalcHeight(content, w);
             var m = Event.current.mousePosition;
             float x = Mathf.Min(m.x + 16f, Ui.CanvasW - w - 4f), y = Mathf.Min(m.y + 16f, Ui.CanvasH - h - 4f);

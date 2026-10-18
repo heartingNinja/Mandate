@@ -72,8 +72,8 @@ namespace Mandate.Viewer
                 string why = task.IsCanceled ? "no answer within 20 seconds" : (task.Exception?.GetBaseException().Message ?? "unknown error");
                 GUILayout.Label($"<color=#ffb37f>could not list models: {why}</color>", Ui.Wrap);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(new GUIContent("Try again", "Ask the provider for its model list again. Check the key first if it keeps failing."), Ui.Button, GUILayout.Width(90))) lists.Remove(cacheKey);
-                if (GUILayout.Button(new GUIContent("Close", "Close the list. You can still type a model id by hand."), Ui.Button, GUILayout.Width(70))) Close();
+                if (Ui.TipButton("Try again", "Ask the provider for its model list again. Check the key first if it keeps failing.", GUILayout.Width(90))) lists.Remove(cacheKey);
+                if (Ui.TipButton("Close", "Close the list. You can still type a model id by hand.", GUILayout.Width(70))) Close();
                 GUILayout.EndHorizontal();
             }
             else
@@ -90,10 +90,10 @@ namespace Mandate.Viewer
 
             GUILayout.BeginHorizontal();
             string searchTip = "Type words to filter the list. Every word must appear in the model's id or name, in any order: \"llama free\" finds free Llama models.";
-            GUILayout.Label(new GUIContent("search", searchTip), Ui.Small, GUILayout.Width(44));
+            Ui.TipLabel("search", searchTip, Ui.Small, GUILayout.Width(44));
             search = GUILayout.TextField(search ?? "", Ui.Field, GUILayout.ExpandWidth(true));
             Ui.Tip(searchTip);
-            if (anyPrices) freeOnly = GUILayout.Toggle(freeOnly, new GUIContent(" free only", "Only show models that cost nothing. Free models have daily limits and can be slow when busy."), Ui.Toggle, GUILayout.Width(90));
+            if (anyPrices) freeOnly = Ui.TipToggle(freeOnly, " free only", "Only show models that cost nothing. Free models have daily limits and can be slow when busy.", GUILayout.Width(90));
             GUILayout.EndHorizontal();
 
             var shown = all.Where(m => (!freeOnly || m.Free) && Matches(m, search)).ToList();
@@ -124,10 +124,10 @@ namespace Mandate.Viewer
 
             GUILayout.BeginHorizontal();
             string defaultModel = DefaultModel(s);
-            if (GUILayout.Button(new GUIContent("Use the default model", $"Clear the model box so this seat uses the provider's default{(defaultModel != null ? $" ({defaultModel})" : "")}."), Ui.Button, GUILayout.Width(170))) { s.ChooseModel("", defaultModel); Close(); }
-            if (GUILayout.Button(new GUIContent("Refresh", "Ask the provider for its model list again, for new models or changed prices."), Ui.Button, GUILayout.Width(80))) lists.Remove(cacheKey);
+            if (Ui.TipButton("Use the default model", $"Clear the model box so this seat uses the provider's default{(defaultModel != null ? $" ({defaultModel})" : "")}.", GUILayout.Width(170))) { s.ChooseModel("", defaultModel); Close(); }
+            if (Ui.TipButton("Refresh", "Ask the provider for its model list again, for new models or changed prices.", GUILayout.Width(80))) lists.Remove(cacheKey);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(new GUIContent("Close", "Close the list. You can still type a model id by hand."), Ui.Button, GUILayout.Width(70))) Close();
+            if (Ui.TipButton("Close", "Close the list. You can still type a model id by hand.", GUILayout.Width(70))) Close();
             GUILayout.EndHorizontal();
         }
 

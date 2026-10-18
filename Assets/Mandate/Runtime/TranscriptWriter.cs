@@ -1,7 +1,8 @@
 // TranscriptWriter — writes a finished game to a plain-text file.
 //
-// The file holds the whole log without rich text, then for every AI seat the system prompt once and every
-// prompt and reply it exchanged, phase by phase, with timings and errors. When the model's provider returns its
+// The file holds the whole log without rich text, a line per AI seat with its model, tokens and cost, then for
+// every AI seat the system prompt once and every prompt and reply it exchanged, phase by phase, with timings,
+// tokens and errors. When the model's provider returns its
 // thinking (OpenRouter, DeepSeek, Claude, Gemini; not OpenAI), it is written just above the reply it led to.
 // Files go to persistentDataPath/Mandate/transcripts/game-<seed>-<date>.txt. OpenFolder() shows that folder in the OS;
 // a browser build has no folders to show, so the scoreboard downloads the file instead (WebFiles.Download).
@@ -9,6 +10,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using Mandate.Agents;
@@ -34,9 +36,30 @@ namespace Mandate.Viewer
             var sb = new StringBuilder();
             sb.Append(log.PlainText());
 
-            foreach (var p in runner.State.Players)
+            // One line per AI seat: the model asked for, the model that answered, and what the game used.
+            var ais = runner.State.Players.Where(p => runner.Seats[p] is LlmAgent).ToList();
+            if (ais.Count > 0)
             {
-                if (!(runner.Seats[p] is LlmAgent llm)) continue;
+                sb.AppendLine();
+                sb.AppendLine("===== AI seats: model, tokens, cost =====");
+                foreach (var p in ais)
+                {
+                    var llm = (LlmAgent)runner.Seats[p];
+                    lock (llm.Transcript)
+                    {
+                        var ex = llm.Transcript;
+                        string used = string.Join(", ", ex.Select(e => e.Model).Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
+                        bool priced = ex.Any(e => e.Cost >= 0);
+                        sb.AppendLine($"{p}  {llm.Kind}  model asked: {llm.Config.Model ?? "-"}  answered by: {(used == "" ? "not said" : used)}  "
+                            + $"tokens in {ex.Sum(e => e.InputTokens):N0} / out {ex.Sum(e => e.OutputTokens):N0}  "
+                            + $"cost {(priced ? "$" + ex.Where(e => e.Cost >= 0).Sum(e => e.Cost).ToString("0.0000") : "not reported")}");
+                    }
+                }
+            }
+
+            foreach (var p in ais)
+            {
+                var llm = (LlmAgent)runner.Seats[p];
                 sb.AppendLine();
                 sb.AppendLine($"===== {p} ({llm.Kind}): every prompt and reply =====");
                 lock (llm.Transcript)   // the agent may still be appending from its worker thread
@@ -44,7 +67,8 @@ namespace Mandate.Viewer
                     if (llm.Transcript.Count > 0) { sb.AppendLine("--- system prompt (same every phase)"); sb.AppendLine(llm.Transcript[0].System); }
                     foreach (var ex in llm.Transcript)
                     {
-                        sb.AppendLine($"--- round {ex.Round} {ex.Phase} ({ex.Seconds:0.0}s){(ex.Error != null ? "  error: " + ex.Error : "")}");
+                        string tokens = ex.InputTokens + ex.OutputTokens > 0 ? $", {ex.InputTokens:N0} in / {ex.OutputTokens:N0} out" : "";
+                        sb.AppendLine($"--- round {ex.Round} {ex.Phase} ({ex.Seconds:0.0}s{tokens}){(ex.Error != null ? "  error: " + ex.Error : "")}");
                         sb.AppendLine(ex.User);
                         if (!string.IsNullOrWhiteSpace(ex.Thinking))
                         {

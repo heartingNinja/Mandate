@@ -192,11 +192,15 @@ namespace Mandate.Agents
         Task<ChatReply> Complete(string system, string user, CancellationToken ct);
     }
 
-    /// <summary>What one chat call returns: the answer, plus the model's thinking when the provider sends it back.</summary>
+    /// <summary>What one chat call returns: the answer, plus the model's thinking and the bill when the provider sends them back.</summary>
     public sealed class ChatReply
     {
         public string Text;       // the answer the game parses
         public string Thinking;   // the model's reasoning, or a summary of it; null when the provider returns none (OpenAI, relay seats)
+        public string Model;      // the model the provider says answered (an alias like ~deepseek/...-latest becomes the real id); null = not said
+        public int InputTokens;   // prompt tokens, cached ones included; 0 = not reported
+        public int OutputTokens;  // reply tokens, thinking included; 0 = not reported
+        public double Cost = -1;  // US dollars for this call, only when the provider reports it (OpenRouter); -1 = unknown
 
         public ChatReply(string text, string thinking = null) { Text = text; Thinking = thinking; }
     }
@@ -218,6 +222,9 @@ namespace Mandate.Agents
         {
             public int Round; public string Phase; public string System; public string User; public string Reply; public string Error; public double Seconds;
             public string Thinking;   // what the model thought before replying, when its provider returns it. Transcript only; never shown to other seats
+            public string Model;      // the model the provider says answered; null = not said (see ChatReply)
+            public int InputTokens, OutputTokens;   // 0 = not reported
+            public double Cost = -1;  // US dollars, -1 = not reported
         }
 
         public LlmAgent(SeatConfig config, IChatClient client) { Config = config; Client = client; }
@@ -235,6 +242,7 @@ namespace Mandate.Agents
                 var reply = await CompleteWithRetry(system, user, ct).ConfigureAwait(false);
                 ex.Reply = reply.Text;
                 ex.Thinking = reply.Thinking;
+                ex.Model = reply.Model; ex.InputTokens = reply.InputTokens; ex.OutputTokens = reply.OutputTokens; ex.Cost = reply.Cost;
                 var obj = Json.FindObject(ex.Reply);
                 if (obj == null) result = new PhaseResponse { Error = "reply was not JSON: " + Snip(ex.Reply) };
                 else

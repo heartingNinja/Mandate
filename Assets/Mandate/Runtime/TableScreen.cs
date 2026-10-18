@@ -32,6 +32,7 @@ namespace Mandate.Viewer
         readonly ModelPicker models;    // the model list that unfolds under a seat's "list" button
         readonly List<string> errors = new List<string>();
         Vector2 scroll;
+        Rect scrollRect;                // where the scroll view sat at the last repaint, for hover tips
         string seedText;                // the seed box is kept as text so a half-typed number is not lost
         int shownSeed;                  // the seed the box last showed, so a change from elsewhere (Play again) updates it
 
@@ -58,13 +59,13 @@ namespace Mandate.Viewer
             GUILayout.Label($"<b>Table</b>  <size=12>who sits where. Keys stay {(WebFiles.InBrowser ? "in this browser" : "on this PC")} and are never shown to the other seats.</size>", Ui.Title);
             GUILayout.FlexibleSpace();
             string playersTip = $"How many players sit at the table: {Rules.MinPlayers} to {Rules.MaxPlayers}. Each one gets a seat card below.";
-            GUILayout.Label(new GUIContent("players", playersTip), Ui.Small, GUILayout.Width(52));
-            if (GUILayout.Button(new GUIContent("-", playersTip), Ui.Button, GUILayout.Width(24))) { view.players = Mathf.Max(Rules.MinPlayers, view.players - 1); expandedSeat = -1; }
-            GUILayout.Label(new GUIContent(view.players.ToString(), playersTip), Ui.Label, GUILayout.Width(20));
-            if (GUILayout.Button(new GUIContent("+", playersTip), Ui.Button, GUILayout.Width(24))) { view.players = Mathf.Min(Rules.MaxPlayers, view.players + 1); view.EnsureSeats(view.players); }
+            Ui.TipLabel("players", playersTip, Ui.Small, GUILayout.Width(52));
+            if (Ui.TipButton("-", playersTip, GUILayout.Width(24))) { view.players = Mathf.Max(Rules.MinPlayers, view.players - 1); expandedSeat = -1; }
+            Ui.TipLabel(view.players.ToString(), playersTip, Ui.Label, GUILayout.Width(20));
+            if (Ui.TipButton("+", playersTip, GUILayout.Width(24))) { view.players = Mathf.Min(Rules.MaxPlayers, view.players + 1); view.EnsureSeats(view.players); }
             GUILayout.EndHorizontal();
 
-            scroll = GUILayout.BeginScrollView(scroll);
+            scroll = Ui.BeginScroll(scroll, scrollRect);
             GUILayout.Label("<size=12>Click a seat's button to choose who plays it: you (first row), a scripted bot, or an AI model "
                 + "(OpenRouter, OpenAI, Claude, Gemini, ...). An AI seat needs that provider's API key, pasted in the Keys section that then appears below.</size>", Ui.Wrap);
             DrawSeats();
@@ -72,7 +73,7 @@ namespace Mandate.Viewer
             DrawGame();
             DrawOptions();
             foreach (var err in errors) GUILayout.Label($"<color=#ff6b6b>{err}</color>", Ui.Wrap);
-            GUILayout.EndScrollView();
+            Ui.EndScroll(ref scrollRect);
             DrawButtons();
 
             GUILayout.EndArea();
@@ -96,23 +97,23 @@ namespace Mandate.Viewer
                 // With shuffling on, the seat (and so the colour) is only known when the game starts.
                 GUILayout.Label(view.shuffleSeats ? $"#{i + 1}" : view.Colors.Tag("P" + (i + 1)), Ui.Label, GUILayout.Width(36));
                 string kindLabel = isHuman ? "you" : kind == "" ? view.botKind + " (default)" : kind;
-                if (GUILayout.Button(new GUIContent(kindLabel + " v", "Choose who plays this seat: you (first row only), a scripted bot, or an AI model."), Ui.Button, GUILayout.Width(150))) { expandedSeat = expandedSeat == i ? -1 : i; models.Close(); }   // plain "v": the web build's font has no arrow characters
+                if (Ui.TipButton(kindLabel + " v", "Choose who plays this seat: you (first row only), a scripted bot, or an AI model.", GUILayout.Width(150))) { expandedSeat = expandedSeat == i ? -1 : i; models.Close(); }   // plain "v": the web build's font has no arrow characters
                 if (isAi || kind == "http")
                 {
                     string nameTip = $"The name shown on the player card and in the log, up to {SeatSetup.MaxNameLength} characters. Picking a model from the list fills it in. Blank = kind:model.";
-                    GUILayout.Label(new GUIContent("name", nameTip), Ui.Small, GUILayout.Width(38));
+                    Ui.TipLabel("name", nameTip, Ui.Small, GUILayout.Width(38));
                     s.name = GUILayout.TextField(s.name ?? "", SeatSetup.MaxNameLength, Ui.Field, GUILayout.Width(120));
                     Ui.Tip(nameTip);
                     string modelTip = kind == "http"
                         ? "The address of your own bot. Each phase the game sends it the board as JSON and expects an action back."
                         : $"Which model plays this seat, as the provider names it. Blank = the default{(info?.Model != null ? $" ({info.Model})" : "")}.{(ModelPicker.CanList(kind) ? " Press list to pick one." : "")}";
-                    GUILayout.Label(new GUIContent(kind == "http" ? "url" : "model", modelTip), Ui.Small, GUILayout.Width(40));
+                    Ui.TipLabel(kind == "http" ? "url" : "model", modelTip, Ui.Small, GUILayout.Width(40));
                     if (kind == "http") { s.endpoint = GUILayout.TextField(s.endpoint ?? "", Ui.Field, GUILayout.ExpandWidth(true)); Ui.Tip(modelTip); }
                     else
                     {
                         s.model = GUILayout.TextField(s.model ?? "", Ui.Field, GUILayout.ExpandWidth(true));
                         Ui.Tip(modelTip);
-                        if (ModelPicker.CanList(kind) && GUILayout.Button(new GUIContent(models.IsOpenFor(i) ? "close" : "list", "Show this provider's models, with prices where known, and pick one."), Ui.Button, GUILayout.Width(50))) { models.Toggle(i); expandedSeat = -1; }
+                        if (ModelPicker.CanList(kind) && Ui.TipButton(models.IsOpenFor(i) ? "close" : "list", "Show this provider's models, with prices where known, and pick one.", GUILayout.Width(50))) { models.Toggle(i); expandedSeat = -1; }
                     }
                 }
                 else if (isHuman) GUILayout.Label("<size=12>a person at this screen. The bottom panel is yours.</size>", Ui.Small);
@@ -135,19 +136,19 @@ namespace Mandate.Viewer
                     if (kind != "http")
                     {
                         string endpointTip = $"The provider's base address. Blank = the default{(info?.Endpoint != null ? $" ({info.Endpoint})" : "")}. Change it for a proxy or a server of your own.";
-                        GUILayout.Label(new GUIContent("endpoint", endpointTip), Ui.Small, GUILayout.Width(58));
+                        Ui.TipLabel("endpoint", endpointTip, Ui.Small, GUILayout.Width(58));
                         s.endpoint = GUILayout.TextField(s.endpoint ?? "", Ui.Field, GUILayout.Width(260));
                         Ui.Tip(endpointTip);
                         string effortTip = $"How hard a thinking model reasons before answering: low, medium or high. Higher is slower and costs more. Blank = the default{(info?.Effort != null ? $" ({info.Effort})" : "")}. Ignored by models that do not support it.";
-                        GUILayout.Label(new GUIContent("effort", effortTip), Ui.Small, GUILayout.Width(44));
+                        Ui.TipLabel("effort", effortTip, Ui.Small, GUILayout.Width(44));
                         s.effort = GUILayout.TextField(s.effort ?? "", Ui.Field, GUILayout.Width(70));
                         Ui.Tip(effortTip);
-                        s.jsonMode = GUILayout.Toggle(s.jsonMode, new GUIContent(" json mode", "Ask the server for strict JSON replies. Can help a model that keeps answering in the wrong format. OpenAI-style servers only, and not all of them support it."), Ui.Toggle, GUILayout.Width(96));
+                        s.jsonMode = Ui.TipToggle(s.jsonMode, " json mode", "Ask the server for strict JSON replies. Can help a model that keeps answering in the wrong format. OpenAI-style servers only, and not all of them support it.", GUILayout.Width(96));
                     }
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     string personaTip = "Extra instructions added to this seat's rules prompt: a personality, a play style, a language. Example: \"You are a cautious diplomat who never breaks a deal.\"";
-                    GUILayout.Label(new GUIContent("persona", personaTip), Ui.Small, GUILayout.Width(58));
+                    Ui.TipLabel("persona", personaTip, Ui.Small, GUILayout.Width(58));
                     s.persona = GUILayout.TextField(s.persona ?? "", Ui.Field, GUILayout.ExpandWidth(true));
                     Ui.Tip(personaTip);
                     GUILayout.EndHorizontal();
@@ -158,8 +159,8 @@ namespace Mandate.Viewer
                 {
                     var choices = i == 0 ? new[] { "you" }.Concat(KindChoices).ToArray() : KindChoices;
                     int current = Array.IndexOf(choices, isHuman ? "you" : kind);
-                    var buttons = choices.Select(c => new GUIContent(c, KindTip(c))).ToArray();
-                    int picked = GUILayout.SelectionGrid(current, buttons, 6, Ui.Button);
+                    int picked = GUILayout.SelectionGrid(current, choices, 6, Ui.Button);
+                    Ui.GridTips(choices.Select(KindTip).ToArray(), 6);
                     if (picked != current && picked >= 0)
                     {
                         s.kind = choices[picked];
@@ -173,7 +174,7 @@ namespace Mandate.Viewer
 
                 GUILayout.EndVertical();
             }
-            advanced = GUILayout.Toggle(advanced, new GUIContent(" advanced fields (endpoint, effort, json mode, persona)", "Show extra settings on each AI seat. Most people never need them: blank fields use the provider's defaults."), Ui.Toggle);
+            advanced = Ui.TipToggle(advanced, " advanced fields (endpoint, effort, json mode, persona)", "Show extra settings on each AI seat. Most people never need them: blank fields use the provider's defaults.");
         }
 
         // The hover text for one choice in the seat kind picker.
@@ -227,7 +228,7 @@ namespace Mandate.Viewer
                     : inEnvironment ? "<color=#7fdc7f>found in the environment</color>"
                     : "<color=#ffb37f>paste a key</color>", Ui.Small);
                 // Clears the box and also removes the key from table.json, so it is gone from this PC (or browser) straight away.
-                if (!string.IsNullOrWhiteSpace(Keys[env]) && GUILayout.Button(new GUIContent("Delete", $"Clear this key and remove it from the saved table straight away, so it is gone from this {(WebFiles.InBrowser ? "browser" : "PC")}."), Ui.Button, GUILayout.Width(64)))
+                if (!string.IsNullOrWhiteSpace(Keys[env]) && Ui.TipButton("Delete", $"Clear this key and remove it from the saved table straight away, so it is gone from this {(WebFiles.InBrowser ? "browser" : "PC")}.", GUILayout.Width(64)))
                 {
                     Keys[env] = "";
                     TableFile.ForgetKey(view.TablePath, env);
@@ -244,13 +245,13 @@ namespace Mandate.Viewer
 
             GUILayout.BeginHorizontal();
             string seedTip = "Any whole number. It decides the board, the objectives and the scripted bots' choices: the same seed gives the same game every time (AI models still vary). Play again moves on to the next seed.";
-            GUILayout.Label(new GUIContent("seed", seedTip), Ui.Small, GUILayout.Width(36));
+            Ui.TipLabel("seed", seedTip, Ui.Small, GUILayout.Width(36));
             if (seedText == null || view.seed != shownSeed) { seedText = view.seed.ToString(); shownSeed = view.seed; }
             seedText = GUILayout.TextField(seedText, Ui.Field, GUILayout.Width(80));
             Ui.Tip(seedTip);
             if (int.TryParse(seedText, out int parsed)) { view.seed = parsed; shownSeed = parsed; }
             GUILayout.Space(16);
-            if (GUILayout.Button(new GUIContent("scripted bots: " + view.botKind, "The scripted bot used for seats left on the default. Click to cycle: greedy (plays toward its objective), random (any legal move), mixed (greedy and random in turn by seat)."), Ui.Button, GUILayout.Width(170)))
+            if (Ui.TipButton("scripted bots: " + view.botKind, "The scripted bot used for seats left on the default. Click to cycle: greedy (plays toward its objective), random (any legal move), mixed (greedy and random in turn by seat).", GUILayout.Width(170)))
                 view.botKind = view.botKind == "greedy" ? "random" : view.botKind == "random" ? "mixed" : "greedy";
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -261,27 +262,27 @@ namespace Mandate.Viewer
         {
             GUILayout.Space(8);
             GUILayout.Label("<b>Options</b>", Ui.Label);
-            view.shuffleSeats = GUILayout.Toggle(view.shuffleSeats, new GUIContent(" shuffle seats each game (so nobody always has the same neighbours; the log says which colour you are)",
-                "The shuffle comes from the seed: same seed, same seating. Off = seat cards keep their order and colour."), Ui.Toggle);
-            view.revealAgentNotes = GUILayout.Toggle(view.revealAgentNotes, new GUIContent(" show AI thinking in the log during the game (you can flip this any time from the top bar; notes are always revealed at the end)",
-                "Each AI seat writes private notes about its plans. On = you read them as it plays. Off = they stay hidden until the game ends."), Ui.Toggle);
+            view.shuffleSeats = Ui.TipToggle(view.shuffleSeats, " shuffle seats each game (so nobody always has the same neighbours; the log says which colour you are)",
+                "The shuffle comes from the seed: same seed, same seating. Off = seat cards keep their order and colour.");
+            view.revealAgentNotes = Ui.TipToggle(view.revealAgentNotes, " show AI thinking in the log during the game (you can flip this any time from the top bar; notes are always revealed at the end)",
+                "Each AI seat writes private notes about its plans. On = you read them as it plays. Off = they stay hidden until the game ends.");
             string rememberTip = "Save the seats, rules and options so they are back the next time you open the game. Keys are only saved if you also tick the box below.";
             string keysTip = "Save the API keys with the table so you do not paste them again. They are stored as plain text, so leave this off on a shared computer.";
             if (WebFiles.InBrowser)
             {
                 // In a browser the files live in this browser's storage for this page, not in a folder.
-                view.rememberTable = GUILayout.Toggle(view.rememberTable, new GUIContent(" remember this table in this browser", rememberTip), Ui.Toggle);
+                view.rememberTable = Ui.TipToggle(view.rememberTable, " remember this table in this browser", rememberTip);
                 // Off by default here (see MandateGameView.LoadTable): other games on the same site can read this browser storage.
                 string webKeysTip = "Off: your keys are forgotten when you close this tab. On: they are saved as plain text in this browser's storage for this website. "
                                   + "On sites that host many games, like itch.io, the other games there can read that storage too, so only tick this if you accept that risk.";
                 if (view.rememberTable)
-                    view.rememberKeys = GUILayout.Toggle(view.rememberKeys, new GUIContent(" remember the keys too (not recommended: other games on this website could read them; off = forgotten when you close the tab)", webKeysTip), Ui.Toggle);
+                    view.rememberKeys = Ui.TipToggle(view.rememberKeys, " remember the keys too (not recommended: other games on this website could read them; off = forgotten when you close the tab)", webKeysTip);
                 GUILayout.Label("<size=11>Your keys are sent only to the provider each seat uses, straight from this browser. A finished game's transcript, with every AI seat's notes and every prompt and reply, can be downloaded from the scoreboard.</size>", Ui.Wrap);
                 return;
             }
-            view.rememberTable = GUILayout.Toggle(view.rememberTable, new GUIContent(" remember this table on this PC", rememberTip), Ui.Toggle);
+            view.rememberTable = Ui.TipToggle(view.rememberTable, " remember this table on this PC", rememberTip);
             if (view.rememberTable)
-                view.rememberKeys = GUILayout.Toggle(view.rememberKeys, new GUIContent($" remember the keys too (plain text in {view.TablePath})", keysTip), Ui.Toggle);
+                view.rememberKeys = Ui.TipToggle(view.rememberKeys, $" remember the keys too (plain text in {view.TablePath})", keysTip);
             GUILayout.Label($"<size=11>Transcripts of finished games, with every AI seat's notes and every prompt and reply, are saved to {view.TranscriptDir}</size>", Ui.Wrap);
         }
 
@@ -290,17 +291,17 @@ namespace Mandate.Viewer
         {
             GUILayout.Space(6);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("<b>Start game</b>", "Check every AI seat's setup (a missing key or unknown kind shows in red above), then start a new game with this table."), Ui.Button, GUILayout.Width(130), GUILayout.Height(30)))
+            if (Ui.TipButton("<b>Start game</b>", "Check every AI seat's setup (a missing key or unknown kind shows in red above), then start a new game with this table.", GUILayout.Width(130), GUILayout.Height(30)))
             {
                 Validate();
                 if (errors.Count == 0) view.StartFromTable();
             }
-            if (errors.Count > 0 && GUILayout.Button(new GUIContent("Start anyway (failed seats become bots)", "Start now. Seats listed in red above are played by scripted bots instead."), Ui.Button, GUILayout.Height(30)))
+            if (errors.Count > 0 && Ui.TipButton("Start anyway (failed seats become bots)", "Start now. Seats listed in red above are played by scripted bots instead.", GUILayout.Height(30)))
                 view.StartFromTable();
             GUILayout.FlexibleSpace();
             // A browser has no folders to open; there the scoreboard downloads each game's transcript instead.
-            if (!WebFiles.InBrowser && GUILayout.Button(new GUIContent("Open transcripts folder", "Open the folder where each finished game's full transcript is saved."), Ui.Button, GUILayout.Height(30))) TranscriptWriter.OpenFolder(view.TranscriptDir);
-            if (GUILayout.Button(new GUIContent(view.Runner == null ? "Close" : "Back to game", "Close this screen. Your changes are kept, and seat changes apply from the next game."), Ui.Button, GUILayout.Width(110), GUILayout.Height(30))) Hide();
+            if (!WebFiles.InBrowser && Ui.TipButton("Open transcripts folder", "Open the folder where each finished game's full transcript is saved.", GUILayout.Height(30))) TranscriptWriter.OpenFolder(view.TranscriptDir);
+            if (Ui.TipButton(view.Runner == null ? "Close" : "Back to game", "Close this screen. Your changes are kept, and seat changes apply from the next game.", GUILayout.Width(110), GUILayout.Height(30))) Hide();
             GUILayout.EndHorizontal();
         }
 
