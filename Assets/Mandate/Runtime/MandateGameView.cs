@@ -89,7 +89,7 @@ namespace Mandate.Viewer
         [Range(10, 600)] public int phaseTimeoutSeconds = 240;
 
         [Tooltip("Show each AI seat's private notes in the log as the game goes. Can be flipped any time from the top bar. Notes are always revealed at the end.")]
-        public bool revealAgentNotes = false;
+        public bool revealAgentNotes = true;
 
         [Tooltip("Write a plain-text transcript of every finished game (log, notes, every prompt and reply) to persistentDataPath/Mandate/transcripts.")]
         public bool saveTranscripts = true;

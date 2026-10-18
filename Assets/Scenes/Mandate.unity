@@ -158,7 +158,7 @@ MonoBehaviour:
   rememberTable: 1
   rememberKeys: 1
   phaseTimeoutSeconds: 240
-  revealAgentNotes: 0
+  revealAgentNotes: 1
   saveTranscripts: 1
   draftObjectives: 1
   adjacentSabotage: 1
