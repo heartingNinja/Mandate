@@ -1,0 +1,13 @@
+[
+  { "kind": "openrouter", "name": "Free model via OpenRouter",
+    "note": "Needs OPENROUTER_API_KEY. The default model is a free-tier one (rate-limited, costs nothing). Set \"model\" to any id from https://openrouter.ai/models, e.g. openai/gpt-6-astra or google/gemini-3.8-flash." },
+
+  { "kind": "gemini", "name": "Gemini",
+    "note": "Needs GEMINI_API_KEY (or GOOGLE_API_KEY). Default model gemini-3.8-flash. Google's own free tier applies." },
+
+  { "kind": "claude", "name": "Claude", "effort": "medium",
+    "note": "Needs ANTHROPIC_API_KEY. Default model claude-opus-5." },
+
+  { "kind": "greedy", "name": "Greedy bot",
+    "note": "A scripted bot. Other kinds: random, openai, groq, deepseek, xai, mistral, together, ollama, lmstudio, vllm, http. Human seats only exist in Unity." }
+]

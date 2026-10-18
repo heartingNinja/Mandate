@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!--
+  Mandate's web page (Player Settings > Web > Resolution and Presentation > WebGL Template = Mandate).
+  Based on Unity's Default template. Differences: the game fills the whole browser window (its UI scales to any
+  size), dark page, the Mandate icon in the tab and on the loading screen, a fullscreen button in the corner, and
+  files under persistentDataPath (the table, remembered keys, transcripts) are saved for the next visit.
+  Icons: TemplateData/favicon.ico and icon.png, made by Tools/MakeIcon/make_icon.py.
+-->
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <link rel="icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+#if SHOW_DIAGNOSTICS
+    <link rel="stylesheet" href="<<<TemplateData/diagnostics.css>>>">
+    <script src="<<<TemplateData/diagnostics.js>>>"></script>
+#endif
+#if DEVELOPMENT_PLAYER
+    <script src="<<<TemplateData/profiler.js>>>"></script>
+#endif
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width="{{{ WIDTH }}}" height="{{{ HEIGHT }}}" tabindex="-1"></canvas>
+      <div id="unity-loading">
+        <img id="unity-loading-icon" src="TemplateData/icon.png" alt="">
+        <div id="unity-loading-title">{{{ PRODUCT_NAME }}}</div>
+        <div id="unity-progress"><div id="unity-progress-full"></div></div>
+      </div>
+      <div id="unity-warning"></div>
+      <button id="unity-fullscreen-button" title="Full screen">&#x26F6;</button>
+#if SHOW_DIAGNOSTICS
+      <img id="diagnostics-icon" src="TemplateData/webmemd-icon.png">
+#endif
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      // Short notices fade after a few seconds; errors stay on top of the game.
+      function unityShowBanner(msg, type) {
+        var banner = document.querySelector("#unity-warning");
+        function update() { banner.style.display = banner.children.length ? "block" : "none"; }
+        var div = document.createElement("div");
+        div.innerHTML = msg;
+        banner.appendChild(div);
+        if (type == "error") div.style = "background: #b3261e; padding: 10px;";
+        else {
+          if (type == "warning") div.style = "background: #8a6d00; padding: 10px;";
+          setTimeout(function () { banner.removeChild(div); update(); }, 5000);
+        }
+        update();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+#if PROGRESSIVE_ASSET_LOADING
+        primaryDataUrls: {{{ JSON.stringify(PRIMARY_DATA_FILES) }}},
+        secondaryDataUrls: {{{ JSON.stringify(SECONDARY_DATA_FILES) }}},
+#else
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+#endif
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+        // Keep the table, remembered keys and transcripts for the next visit (also done by WebFiles.Save in the game).
+        autoSyncPersistentDataPath: true,
+      };
+
+#if BACKGROUND_FILENAME
+      canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";
+#endif
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function () {
+        var loading = document.querySelector("#unity-loading");
+        var bar = document.querySelector("#unity-progress-full");
+        createUnityInstance(canvas, config, function (progress) {
+          bar.style.width = 100 * progress + "%";
+        }).then(function (unityInstance) {
+          loading.style.display = "none";
+          document.querySelector("#unity-fullscreen-button").onclick = function () { unityInstance.SetFullscreen(1); };
+#if SHOW_DIAGNOSTICS
+          document.getElementById("diagnostics-icon").onclick = function () {
+            unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);
+          };
+#endif
+        }).catch(function (message) {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

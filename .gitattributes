@@ -1,0 +1,31 @@
+# Normalise line endings in the repo; Unity reads either on checkout
+* text=auto
+
+# Code and docs
+*.cs     text diff=csharp
+*.md     text
+*.json   text
+*.py     text eol=lf
+*.sh     text eol=lf
+
+# Unity YAML assets: text, but merging them by hand is unsafe
+*.unity        text merge=unityyamlmerge
+*.prefab       text merge=unityyamlmerge
+*.asset        text merge=unityyamlmerge
+*.mat          text merge=unityyamlmerge
+*.meta         text merge=unityyamlmerge
+*.controller   text merge=unityyamlmerge
+*.anim         text merge=unityyamlmerge
+*.asmdef       text
+*.inputactions text
+
+# Binary files
+*.png  binary
+*.jpg  binary
+*.psd  binary
+*.wav  binary
+*.mp3  binary
+*.ogg  binary
+*.fbx  binary
+*.ttf  binary
+*.otf  binary

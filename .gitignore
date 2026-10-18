@@ -1,0 +1,58 @@
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/ProfilerCaptures/
+# Burst output left at the project root by the WebGL build
+/[Dd]ata/
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+
+# IDE files Unity regenerates
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+sysinfo.txt
+crashlytics-build.properties
+
+# Headless console harness output (keep MandateConsole.csproj)
+!/Tools/MandateConsole/MandateConsole.csproj
+/Tools/MandateConsole/bin/
+/Tools/MandateConsole/obj/
+/Tools/MandateConsole/transcripts/
+
+# Python
+__pycache__/
+
+# Local secrets, just in case
+seats.json
+.env
+*.key
+
+# Results relay URL + token (Tools/MandateResultsRelay/README.md). Built into the game, kept out of the public repo.
+/Assets/Resources/MandateResultsRelay.json
+/Assets/Resources/MandateResultsRelay.json.meta

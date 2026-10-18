@@ -1,0 +1,9 @@
+<!--
+  Keeps every type in the Mandate assemblies in a build. The AI seats' replies are read into the wire classes
+  (Mandate.Core Wire DTOs) by Newtonsoft.Json through reflection, which Unity's code stripping cannot see, so in a
+  WebGL or other IL2CPP build it could remove the fields a reply needs and every answer would come back empty.
+-->
+<linker>
+  <assembly fullname="Mandate.Core" preserve="all" />
+  <assembly fullname="Mandate.Agents" preserve="all" />
+</linker>

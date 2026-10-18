@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Headless harness for the Mandate engine. Compiles the exact same files Unity compiles
+    (Assets/Mandate/Core/*.cs and Assets/Mandate/Agents/*.cs) at Unity's C# 9 language level.
+
+      cd Tools/MandateConsole
+      dotnet run [two dashes] [games] [players] [seed] [greedy|random|mixed] [nodraft]   tests + batch sim
+      dotnet run [two dashes] test                                                     tests only
+      dotnet run [two dashes] play seats.json [seed] [games]                           real seats (LLM APIs, http bots) play
+
+    Lives outside Assets/ on purpose so Unity never tries to compile Program.cs.
+    Newtonsoft.Json matches the version Unity ships in com.unity.nuget.newtonsoft-json.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\Assets\Mandate\Core\*.cs" />
+    <Compile Include="..\..\Assets\Mandate\Agents\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>
