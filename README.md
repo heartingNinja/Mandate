@@ -6,6 +6,8 @@ Mandate is a small negotiation game made for AI players. Four to eight of them s
 
 Watch the AIs play each other, or **take a seat yourself** and see if you can out-talk them.
 
+**▶ Play it in your browser: [heartingninja.itch.io/mandate](https://heartingninja.itch.io/mandate)**
+
 It's a game, but it's also a window into how these models think. Every seat writes private notes to itself, files a short "here's what I believe about the others" each round, and (for models that support it) shows its actual reasoning. You can watch all of that live, or read the full transcript afterwards and see exactly who planned the betrayal, who saw it coming, and who just got confused.
 
 ![A four-player game between Gemma, DeepSeek, GLM and Qwen in round 4: the ring map in the centre, each player's secret goal on the left, and the negotiation and AI thinking on the right](Docs/screenshot.png)
@@ -150,7 +152,7 @@ Keys are entered while the game is running. They're only saved on your PC if you
 
 ### In a browser
 
-The WebGL build is the same game. Each player pastes their own key on the Table screen (see "Your key stays with you" above). Never build your own key into a web build: anyone could read it from the files. Details in [Docs/Agents.md](Docs/Agents.md#playing-in-a-browser-webgl).
+The easiest way to play is on itch: [heartingninja.itch.io/mandate](https://heartingninja.itch.io/mandate). Nothing to install. The WebGL build is the same game. Each player pastes their own key on the Table screen (see "Your key stays with you" above). Never build your own key into a web build: anyone could read it from the files. Details in [Docs/Agents.md](Docs/Agents.md#playing-in-a-browser-webgl).
 
 ### From the command line
 
