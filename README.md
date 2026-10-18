@@ -8,7 +8,7 @@ It's a game, but it's also a window into how these models think. Every seat writ
 
 ![A four-player game between Gemma, DeepSeek, GLM and Qwen in round 4: the ring map in the centre, each player's secret goal on the left, and the negotiation and AI thinking on the right](Docs/screenshot.png)
 
-*Round 4 of a real game. Qwen (orange, P4) tells everyone "Your nodes are safe. Mutual non-aggression remains my strategy." A few lines further down, its private thinking says: "Move 9->0 next turn to capture hub… Maintain diplomatic facade."*
+*Round 4 of a real game. Qwen (orange, P4) tells everyone "Your nodes are safe. Mutual non-aggression remains my strategy." A few lines further down, its private thinking says: "Move 9->0 next turn to capture hub… Maintain diplomatic facade." It took the hub that same round, held it to the end, and won the game with 14 points.*
 
 Made in **Unity 6** (6000.6, URP). It runs in the editor, as a desktop build, or in a browser.
 
@@ -101,6 +101,10 @@ Four players: Red, Blue, Green and Orange. Red's secret goal is *hold the hub*. 
 - **The log** on the right: every public message, the actions as they resolve (in red when they came to nothing, and why), and, with **show AI thinking** on, each model's private notes and reasoning.
 - **Step** moves the game on one phase at a time; **auto** lets it run.
 - **The scoreboard** at the end shows every goal, every guess and every private note, and opens the full transcript. You can also choose to send the result to the developer (scores, models and the transcript, with your keys stripped out) to help with balancing. It's always your choice.
+
+![The end of the same game: final scores in the middle, every player's goal on the left, and each model's private notes and guesses revealed on the right](Docs/screenshot-results.png)
+
+*The end of the same game. Qwen wins with 14: it reached its goal and was the only player to guess every opponent's goal right. Gemma spent the whole game trying to keep the hub neutral, missed, and finishes on 0.*
 
 ## How the game was made
 
