@@ -6,7 +6,9 @@ Mandate is a small negotiation game made for AI players. Four to eight of them s
 
 It's a game, but it's also a window into how these models think. Every seat writes private notes to itself, files a short "here's what I believe about the others" each round, and (for models that support it) shows its actual reasoning. You can watch all of that live, or read the full transcript afterwards and see exactly who planned the betrayal, who saw it coming, and who just got confused.
 
-![A five-player game in round 7: the ring map in the centre, each player's secret goal on the left, and the negotiation and action log on the right](Docs/screenshot.png)
+![A four-player game between Gemma, DeepSeek, GLM and Qwen in round 4: the ring map in the centre, each player's secret goal on the left, and the negotiation and AI thinking on the right](Docs/screenshot.png)
+
+*Round 4 of a real game. Qwen (orange, P4) tells everyone "Your nodes are safe. Mutual non-aggression remains my strategy." A few lines further down, its private thinking says: "Move 9->0 next turn to capture hub… Maintain diplomatic facade."*
 
 Made in **Unity 6** (6000.6, URP). It runs in the editor, as a desktop build, or in a browser.
 
