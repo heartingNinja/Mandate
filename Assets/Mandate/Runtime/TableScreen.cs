@@ -271,8 +271,11 @@ namespace Mandate.Viewer
             {
                 // In a browser the files live in this browser's storage for this page, not in a folder.
                 view.rememberTable = GUILayout.Toggle(view.rememberTable, new GUIContent(" remember this table in this browser", rememberTip), Ui.Toggle);
+                // Off by default here (see MandateGameView.LoadTable): other games on the same site can read this browser storage.
+                string webKeysTip = "Off: your keys are forgotten when you close this tab. On: they are saved as plain text in this browser's storage for this website. "
+                                  + "On sites that host many games, like itch.io, the other games there can read that storage too, so only tick this if you accept that risk.";
                 if (view.rememberTable)
-                    view.rememberKeys = GUILayout.Toggle(view.rememberKeys, new GUIContent(" remember the keys too (kept in this browser only, as plain text; untick on a shared computer)", keysTip), Ui.Toggle);
+                    view.rememberKeys = GUILayout.Toggle(view.rememberKeys, new GUIContent(" remember the keys too (not recommended: other games on this website could read them; off = forgotten when you close the tab)", webKeysTip), Ui.Toggle);
                 GUILayout.Label("<size=11>Your keys are sent only to the provider each seat uses, straight from this browser. A finished game's transcript, with every AI seat's notes and every prompt and reply, can be downloaded from the scoreboard.</size>", Ui.Wrap);
                 return;
             }

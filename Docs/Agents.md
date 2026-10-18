@@ -63,10 +63,13 @@ A key typed on the Table screen wins over the environment; a seat's own `apiKey`
 
 A WebGL build runs the whole game in the player's browser, AI seats included. Each player brings their own key:
 
-- **Where the key lives.** Typed on the Table screen, as on desktop. With "remember the keys too" it is saved in
-  that browser's own storage for that page (IndexedDB, under `persistentDataPath`), as plain text. It never
-  reaches us or anyone else. Calls go from the browser straight to the provider. A browser has no environment
-  variables, so route 2 above does not exist there.
+- **Where the key lives.** Typed on the Table screen, as on desktop, and kept only until the tab closes. In a
+  browser "remember the keys too" starts **off** (`MandateGameView.LoadTable`). Ticked, the keys are saved as plain
+  text in the browser's storage (IndexedDB, under `persistentDataPath`). That storage belongs to the website, not
+  the page, and sites like itch.io serve every game from one address, so another game on the same site could read
+  saved keys. That is why it is off by default and the label says "not recommended". Keys never reach us; calls go
+  from the browser straight to the provider. A browser has no environment variables, so route 2 above does not
+  exist there.
 - **Never put your own key in a web build** (seat `apiKey`, the scene, a file in the build). Anyone can read the
   build files and spend your credit.
 - **Which providers work.** A browser only lets a page call a server that allows it (CORS). Checked 2026-10-18:
@@ -81,13 +84,14 @@ A WebGL build runs the whole game in the player's browser, AI seats included. Ea
   these hints under the seat. Not yet tried with a real local model in a browser; the desktop build is the easy
   route for local models.
 - **Remember and Delete.** With "remember the keys too" ticked, keys come back on the next visit (same browser,
-  same address). **Delete** next to a key removes it from the browser at once. Unticking "remember this table" and
+  same address), and the box comes back ticked too. **Delete** next to a key removes it from the browser at once. Unticking "remember this table" and
   starting a game deletes the saved table, keys included. A private window forgets everything when closed, and
   some browsers (Safari) clear a site's storage after a few weeks without a visit.
 - **Transcripts** are saved in the browser too, and the scoreboard has **Download transcript** in place of the
   folder button. **Send results...** works the same.
-- Re-uploading the build to a new address (itch.io gives every upload its own) starts with an empty table, because
-  browser storage belongs to the address.
+- Re-uploading the build to a new page (itch.io gives every upload its own) starts with an empty table, because
+  Unity keeps a separate folder in that storage for each page. The folders are separate, not private: any page on
+  the same website can open them.
 
 How it works: every request goes through `Http.Transport`. The Unity view installs `WebRequests`
 (`Assets/Mandate/Runtime/WebRequests.cs`), which sends with `UnityWebRequest` on the main thread. It does this in

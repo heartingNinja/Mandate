@@ -82,7 +82,7 @@ namespace Mandate.Viewer
         [Tooltip("Save the table (seats and options) to persistentDataPath/Mandate/table.json when a game starts, and load it next time.")]
         public bool rememberTable = true;
 
-        [Tooltip("Also save API keys typed on the Table screen into that file. It is plain text on this PC only; untick to keep keys for this session.")]
+        [Tooltip("Also save API keys typed on the Table screen into that file. It is plain text on this PC only; untick to keep keys for this session. Always starts off in a browser (see LoadTable).")]
         public bool rememberKeys = true;
 
         [Tooltip("Seconds an AI seat gets to answer each phase. A seat that is late counts as a pass for that phase. Cheap 'flash' models on shared servers often need 1-2 minutes, so leave room.")]
@@ -414,6 +414,9 @@ namespace Mandate.Viewer
         // Applies the remembered table (if any) to the inspector fields and the Table screen's keys.
         void LoadTable()
         {
+            // In a browser, keys are kept only until the tab closes unless the player ticks "remember the keys".
+            // Sites like itch.io serve every game from one address, so another game there could read saved files.
+            if (WebFiles.InBrowser) rememberKeys = false;
             var file = TableFile.Load(TablePath);
             if (file == null) return;
             if (file.players >= Rules.MinPlayers && file.players <= Rules.MaxPlayers) players = file.players;
@@ -428,6 +431,8 @@ namespace Mandate.Viewer
             Table.Keys.Clear();
             foreach (var k in file.keys ?? new List<KeyEntry>())
                 if (!string.IsNullOrWhiteSpace(k.env) && !string.IsNullOrWhiteSpace(k.key)) Table.Keys[k.env] = k.key;
+            // Saved keys mean the player chose to remember them: keep the box ticked so the next Start doesn't erase them.
+            if (Table.Keys.Count > 0) rememberKeys = true;
             humanPlays = seats.Length > 0 && seats[0] != null && seats[0].IsHuman();
         }
 

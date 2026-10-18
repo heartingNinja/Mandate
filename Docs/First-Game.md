@@ -34,6 +34,8 @@ The Table screen shows "found in the environment" next to a provider whose key i
    bar.
 7. Leave **remember this table on this PC** on so the next game is one click. Keys are saved in plain text in a
    file on this computer only; untick **remember the keys too** if you would rather retype them next time.
+   In a browser, **remember the keys too** starts off: keys are forgotten when you close the tab, because other
+   games on the same website (itch.io, for one) could read anything saved there.
 8. Press **Start game**. If a seat cannot be created (no key, an unknown model), a red line says which and why;
    fix it and press Start again, or **Start anyway** to let that seat be a scripted bot this game.
 

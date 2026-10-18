@@ -4,6 +4,8 @@
 
 Mandate is a small negotiation game made for AI players. Four to eight of them share a map. Each has a hidden goal. They chat, make deals, promise not to attack, and then secretly pick their moves, which all happen at the same moment. Some keep their word. Some don't. At the end, everyone has to guess what everyone else was really after.
 
+Watch the AIs play each other, or **take a seat yourself** and see if you can out-talk them.
+
 It's a game, but it's also a window into how these models think. Every seat writes private notes to itself, files a short "here's what I believe about the others" each round, and (for models that support it) shows its actual reasoning. You can watch all of that live, or read the full transcript afterwards and see exactly who planned the betrayal, who saw it coming, and who just got confused.
 
 ![A four-player game between Gemma, DeepSeek, GLM and Qwen in round 4: the ring map in the centre, each player's secret goal on the left, and the negotiation and AI thinking on the right](Docs/screenshot.png)
@@ -11,8 +13,6 @@ It's a game, but it's also a window into how these models think. Every seat writ
 *Round 4 of a real game. Qwen (orange, P4) tells everyone "Your nodes are safe. Mutual non-aggression remains my strategy." A few lines further down, its private thinking says: "Move 9->0 next turn to capture hub… Maintain diplomatic facade." It took the hub that same round, held it to the end, and won the game with 14 points.*
 
 Made in **Unity 6** (6000.6, URP). It runs in the editor, as a desktop build, or in a browser.
-
-**You don't need an API key to try it.** The default table is all scripted bots, so you can press Play and watch (or join) a game straight away. Add real AI models whenever you like.
 
 ## What it's like to watch
 
@@ -26,11 +26,23 @@ A few things that have actually happened at the table:
 
 Two games are going on at once. One is on the map. The other is in the conversation: reach your goal without giving it away, and read the table better than it reads you. A player who wins on the map but was obvious about it can lose to a quieter one nobody figured out.
 
+## How to play
+
+**No key needed to try it.** The default table is all scripted bots. Press Start and watch, or take a seat yourself.
+
+**To play against the AIs,** set seat 1 to "you" on the Table screen. You chat with the others in public or in private, make trade offers, pick your action each round, and guess their goals at the end, just like they do. Their goal cards stay hidden from you until the game is over. For a fair game, leave "show AI thinking" off, since it lets you read their private plans.
+
+**To bring in real AI models,** open the Table screen, pick a provider for each seat and paste your own API key. OpenRouter has free models, so you can run a full AI game without paying anything. OpenAI, Anthropic (Claude), Google Gemini, DeepSeek, xAI, Mistral and Together work too, and you can mix them in one game.
+
+**Your key stays with you.** It is sent only to the provider that seat uses, never to the developer. In a browser it's forgotten when you close the tab unless you tick "remember the keys", which starts off and isn't recommended on sites like itch.io, where other games share the same web address and could read it.
+
+A full AI game takes a while, because every model thinks before each move. Leave it running and check back in.
+
 ## The rules
 
 ### The map
 
-The map is a ring of **nodes**. Each node is worth 1 to 3 **production**, and production is how players are compared at the end. Everyone starts with two nodes side by side, worth 4 in total, so nobody gets a weaker start.
+The map is a ring of **nodes**. Each node is worth 1 to 3 **production**. Production doesn't score points by itself, but many goal cards depend on it, like "have the most production" or "reach 8 production". Everyone starts with two nodes side by side, worth 4 in total, so nobody gets a weaker start.
 
 Between every pair of neighbouring players sits one empty **gap node**. In the middle, off the ring, is the **hub** (node 0). It's worth 3 and connects to every gap node, so it's a shortcut across the map and the most fought-over spot on the board.
 
@@ -138,7 +150,7 @@ Keys are entered while the game is running. They're only saved on your PC if you
 
 ### In a browser
 
-The WebGL build is the same game. Each player pastes their own key on the Table screen. It stays in their browser and only goes to the provider that seat uses. (Never build your own key into a web build: anyone could read it from the files.) Details in [Docs/Agents.md](Docs/Agents.md#playing-in-a-browser-webgl).
+The WebGL build is the same game. Each player pastes their own key on the Table screen (see "Your key stays with you" above). Never build your own key into a web build: anyone could read it from the files. Details in [Docs/Agents.md](Docs/Agents.md#playing-in-a-browser-webgl).
 
 ### From the command line
 
