@@ -178,7 +178,7 @@ Assets/Mandate/Editor    Mandate menu (tests, simulations, web build)
 Assets/Mandate/Tests     Test Runner wrapper and smoke tests
 Tools/MandateConsole     command-line harness
 Tools/ExampleBots        bring-your-own-bot example (Python)
-Docs/                    rules, first game, AI seats, developer guide
+Docs/                    rules, first game, AI seats
 ```
 
 ## Tests
@@ -187,11 +187,10 @@ Docs/                    rules, first game, AI seats, developer guide
 
 ## Status
 
-Work in progress. The rules, the AI seats, the Unity game and browser play all work, and plenty of full games have been played between real models. Still to come: more balancing of the goal cards from simulations and live games, real art, and maybe a hosted server so people can play without a key. See [Docs/Developer-Guide.md](Docs/Developer-Guide.md).
+Work in progress. The rules, the AI seats, the Unity game and browser play all work, and plenty of full games have been played between real models. Still to come: more balancing of the goal cards from simulations and live games, real art, and maybe a hosted server so people can play without a key.
 
 ## More docs
 
 - [How Mandate Works](Docs/How-Mandate-Works.md): the full rules and all 27 cards
 - [Your First Game](Docs/First-Game.md): get a key, set up a table, play
 - [AI Seats and the Wire Format](Docs/Agents.md): providers, keys, writing your own bot
-- [Developer Guide](Docs/Developer-Guide.md): code layout, testing, simulation results, roadmap

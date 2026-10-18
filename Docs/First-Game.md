@@ -137,5 +137,5 @@ For many games at once, without Unity: open a terminal in `Tools/MandateConsole`
 - Try a table with different providers in each seat and see who reads whom.
 - Give the seats personas (tick **advanced fields** on the Table screen). A table of four ruthless liars plays
   very differently from four diplomats.
-- The rules are meant to change. `Docs/Developer-Guide.md` has the simulation results and the open balance
-  questions if you want to tune the goal cards.
+- The rules are meant to change. To test a tweak to the goal cards, run the simulator
+  (`dotnet run -- 1000 4 42 greedy` in `Tools/MandateConsole`) and compare how often each card is met.
